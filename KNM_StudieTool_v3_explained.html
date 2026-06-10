@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KNM Studietool / Study Tool</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#ffffff;--bg2:#f7f6f3;--bg3:#f0ede8;
+    --text:#1a1a1a;--text2:#555;--text3:#888;
+    --border:#e0ddd8;--border2:#ccc;
+    --blue:#1a6ebd;--blue-bg:#e8f2fc;--blue-text:#0d4a82;
+    --green:#2a7d4f;--green-bg:#e6f5ed;--green-text:#1a5235;
+    --red:#c0392b;--red-bg:#fdecea;--red-text:#7b1e15;
+    --amber:#b8690a;--amber-bg:#fef5e4;--amber-text:#7a420a;
+    --purple:#6b35b8;--purple-bg:#f2ecfc;--purple-text:#3d1a72;
+    --teal:#0e7c6e;--teal-bg:#e5f5f3;--teal-text:#074d44;
+    --radius:8px;--radius-lg:12px;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg2);color:var(--text);font-size:15px;line-height:1.6;min-height:100vh}
+  a{color:var(--blue);text-decoration:none}
+
+  /* LAYOUT */
+  .app{max-width:960px;margin:0 auto;padding:0 16px 60px}
+  header{padding:28px 0 20px;border-bottom:1px solid var(--border);margin-bottom:24px}
+  .header-top{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  h1{font-size:22px;font-weight:600;color:var(--text)}
+  .subtitle{font-size:13px;color:var(--text3);margin-top:4px}
+  .lang-toggle{display:flex;gap:6px}
+  .lang-btn{font-size:12px;padding:4px 10px;border-radius:20px;border:1px solid var(--border2);background:var(--bg);color:var(--text2);cursor:pointer}
+  .lang-btn.active{background:var(--text);color:#fff;border-color:var(--text)}
+
+  /* TABS */
+  .tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:0}
+  .tab{padding:10px 16px;font-size:14px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+  .tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+  .tab:hover:not(.active){color:var(--text)}
+  .panel{display:none}
+  .panel.active{display:block}
+
+  /* THEME CARDS — overview panel */
+  .theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  .theme-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+  .theme-card:hover{border-color:var(--border2);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .tc-num{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .tc-title{font-size:15px;font-weight:600;margin-bottom:4px}
+  .tc-en{font-size:13px;color:var(--text2);margin-bottom:10px}
+  .tc-desc-nl{font-size:13px;color:var(--text2);margin-bottom:4px}
+  .tc-desc-en{font-size:12px;color:var(--text3);font-style:italic}
+  .tc-meta{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:3px 8px;border-radius:20px;font-weight:500}
+  .badge-blue{background:var(--blue-bg);color:var(--blue-text)}
+  .badge-red{background:var(--red-bg);color:var(--red-text)}
+  .badge-green{background:var(--green-bg);color:var(--green-text)}
+
+  /* VOCABULARY PANEL */
+  .vocab-controls{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+  .filter-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .filter-scroll::-webkit-scrollbar{display:none}
+  .search-wrap{position:relative}
+  .search-wrap input{width:100%;padding:8px 12px 8px 34px;border:1px solid var(--border2);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text)}
+  .search-wrap::before{content:"🔍";position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none}
+  select{padding:8px 12px;border:1px solid var(--border2);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);cursor:pointer}
+  .filter-btns{display:flex;gap:6px;flex-wrap:wrap}
+  .filter-btn{font-size:12px;padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;white-space:nowrap}
+  .filter-btn.active{background:var(--text);color:#fff;border-color:var(--text)}
+
+  /* VOCAB TABLE */
+  .vocab-table{width:100%;border-collapse:collapse}
+  .vocab-table th{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;background:var(--bg2)}
+  .vocab-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+  .vocab-table tr:last-child td{border-bottom:none}
+  .vocab-table tr:hover td{background:var(--bg2)}
+  .section-header td{background:var(--bg3)!important;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;padding:8px 12px}
+  .kw-nl{font-weight:600;font-size:14px}
+  .kw-en{font-size:13px;color:var(--text2);margin-top:1px}
+  .kw-note{font-size:12px;color:var(--text3);font-style:italic;margin-top:3px}
+  .kw-note-inline{display:none}
+  .exam-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+  .etag{font-size:10px;padding:2px 6px;border-radius:20px;font-weight:500}
+  .etag-1{background:var(--blue-bg);color:var(--blue-text)}
+  .etag-2{background:var(--purple-bg);color:var(--purple-text)}
+  .wrong-tag{background:var(--red-bg);color:var(--red-text);font-size:10px;padding:2px 6px;border-radius:20px;font-weight:500;margin-left:4px}
+
+  /* Q&A PANEL */
+  .qa-header{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+  .qa-filter{display:flex;gap:6px;flex-wrap:wrap}
+  .qa-cards{display:flex;flex-direction:column;gap:12px}
+  .qa-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+  .qa-q{padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .qa-q-text{font-size:14px;flex:1}
+  .qa-q-meta{display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+  .qa-chevron{font-size:12px;color:var(--text3);transition:transform .2s;margin-top:2px}
+  .qa-card.open .qa-chevron{transform:rotate(180deg)}
+  .qa-answer{display:none;padding:0 16px 14px;border-top:1px solid var(--border)}
+  .qa-card.open .qa-answer{display:block}
+  .ans-correct{background:var(--green-bg);border-left:3px solid var(--green);padding:10px 12px;border-radius:0 var(--radius) var(--radius) 0;margin:12px 0 8px}
+  .ans-label{font-size:11px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+  .ans-text{font-size:14px;font-weight:600;color:var(--green-text)}
+  .ans-en{font-size:12px;color:var(--green);margin-top:2px}
+  .ans-note{font-size:13px;color:var(--text2);margin-top:8px;line-height:1.55}
+  .wrong-mark{color:var(--red);font-size:12px;background:var(--red-bg);padding:2px 6px;border-radius:20px}
+
+  /* SUMMARY PANEL */
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:28px}
+  .stat-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;text-align:center}
+  .stat-num{font-size:28px;font-weight:700;margin-bottom:4px}
+  .stat-label{font-size:12px;color:var(--text2)}
+  .stat-blue{color:var(--blue)}
+  .stat-green{color:var(--green)}
+  .stat-red{color:var(--red)}
+  .section-title{font-size:16px;font-weight:600;margin:24px 0 12px}
+  .wrong-list{display:flex;flex-direction:column;gap:8px}
+  .wrong-item{background:var(--red-bg);border:1px solid #f5c0bc;border-radius:var(--radius);padding:12px 14px}
+  .wi-q{font-size:13px;font-weight:600;color:var(--red-text);margin-bottom:3px}
+  .wi-a{font-size:13px;color:var(--text2)}
+  .wi-source{font-size:11px;color:var(--text3);margin-top:4px}
+  .no-results{text-align:center;padding:40px 20px;color:var(--text3);font-size:14px}
+
+  /* NOTE BOX */
+  .note-box{background:var(--amber-bg);border:1px solid #f0c060;border-radius:var(--radius);padding:12px 14px;margin-bottom:20px;font-size:13px;color:var(--amber-text)}
+
+  /* ── UITLEG (EXPLANATION) PANEL ─────────────────────── */
+  .uitleg-layout{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start}
+  .uitleg-nav{position:sticky;top:16px;display:flex;flex-direction:column;gap:4px}
+  .uitleg-nav-btn{text-align:left;padding:10px 12px;border-radius:var(--radius);border:none;background:transparent;color:var(--text2);font-size:13px;cursor:pointer;line-height:1.4;transition:background .12s}
+  .uitleg-nav-btn:hover{background:var(--bg3)}
+  .uitleg-nav-btn.active{background:var(--blue-bg);color:var(--blue-text);font-weight:600}
+  .uitleg-nav-num{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:1px}
+  .uitleg-nav-btn.active .uitleg-nav-num{color:var(--blue)}
+
+  /* Content area */
+  .uitleg-content{min-width:0}
+  .uitleg-section{display:none}
+  .uitleg-section.active{display:block}
+
+  /* Section header */
+  .us-header{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+  .us-tag{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+  .us-emoji{font-size:18px}
+  .us-title-nl{font-size:20px;font-weight:700;color:var(--text);margin-bottom:2px}
+  .us-title-en{font-size:14px;color:var(--text2)}
+  .us-difficulty{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;margin-top:8px}
+  .diff-hard{background:var(--red-bg);color:var(--red-text)}
+  .diff-medium{background:var(--amber-bg);color:var(--amber-text)}
+  .diff-easy{background:var(--green-bg);color:var(--green-text)}
+
+  /* Content blocks */
+  .us-block{margin-bottom:24px}
+  .us-block-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .us-block-title::before{content:'';display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px}
+  .us-prose{font-size:14px;color:var(--text2);line-height:1.7}
+  .us-prose p{margin-bottom:10px}
+  .us-prose p:last-child{margin-bottom:0}
+  .us-prose strong{color:var(--text);font-weight:600}
+
+  /* Definition list */
+  .us-deflist{display:flex;flex-direction:column;gap:8px}
+  .us-def{background:var(--bg2);border-radius:var(--radius);padding:10px 12px;font-size:13px}
+  .us-def-term{font-weight:600;color:var(--text);margin-bottom:2px}
+  .us-def-desc{color:var(--text2);line-height:1.5}
+
+  /* Table */
+  .us-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  .us-table th{text-align:left;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:7px 10px;border-bottom:1px solid var(--border);background:var(--bg2)}
+  .us-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text2)}
+  .us-table tr:last-child td{border-bottom:none}
+  .us-table td:first-child{font-weight:600;color:var(--text);white-space:nowrap}
+
+  /* School path diagram */
+  .school-path{display:flex;flex-direction:column;gap:0;margin-top:4px}
+  .sp-row{display:flex;align-items:stretch;gap:0}
+  .sp-cell{flex:1;border:1px solid var(--border);border-radius:var(--radius);margin:3px;padding:10px 12px;background:var(--bg);font-size:13px}
+  .sp-cell-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+  .sp-cell-name{font-weight:600;color:var(--text);margin-bottom:1px}
+  .sp-cell-detail{font-size:12px;color:var(--text2)}
+  .sp-arrow{text-align:center;color:var(--text3);font-size:18px;padding:2px 0;line-height:1}
+  .sp-cell.sp-highlight{background:var(--blue-bg);border-color:var(--blue)}
+  .sp-cell.sp-highlight .sp-cell-name{color:var(--blue-text)}
+
+  /* Examples block */
+  .us-examples{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+  .us-example{background:var(--bg2);border-left:3px solid var(--blue);border-radius:0 var(--radius) var(--radius) 0;padding:8px 12px}
+  .us-ex-nl{font-size:13px;font-weight:500;color:var(--text)}
+  .us-ex-en{font-size:12px;color:var(--text3);margin-top:1px;font-style:italic}
+
+  /* Tip box */
+  .us-tip{background:var(--amber-bg);border:1px solid #f0c060;border-radius:var(--radius);padding:10px 12px;font-size:13px;color:var(--amber-text);margin-top:4px}
+  .us-tip strong{color:var(--amber)}
+
+  /* Bilingual prose block */
+  .us-bilingual{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px}
+  .us-bil-nl{background:var(--bg2);border-radius:var(--radius);padding:12px 14px;font-size:14px;color:var(--text2);line-height:1.7;border-left:3px solid var(--blue)}
+  .us-bil-en{background:var(--bg2);border-radius:var(--radius);padding:12px 14px;font-size:14px;color:var(--text2);line-height:1.7;border-left:3px solid #aaa}
+  .us-bil-lang{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;color:var(--text3)}
+  .us-bil-nl .us-bil-lang{color:var(--blue-text)}
+
+  /* School path diagram */
+  .us-path{margin-top:8px}
+  .us-path-row{display:flex;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+  .us-path-arrow{text-align:center;color:var(--text3);font-size:20px;line-height:1;margin:2px 0;padding-left:4px}
+  .us-path-box{flex:1;min-width:140px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px}
+  .us-path-box.pb-blue{background:var(--blue-bg);border-color:var(--blue)}
+  .us-path-box.pb-green{background:var(--green-bg);border-color:var(--green)}
+  .us-path-box.pb-amber{background:var(--amber-bg);border-color:#f0c060}
+  .us-path-box.pb-purple{background:var(--purple-bg);border-color:var(--purple)}
+  .us-path-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:3px}
+  .us-path-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px}
+  .us-path-box.pb-blue .us-path-name{color:var(--blue-text)}
+  .us-path-box.pb-green .us-path-name{color:var(--green-text)}
+  .us-path-box.pb-amber .us-path-name{color:var(--amber-text)}
+  .us-path-box.pb-purple .us-path-name{color:var(--purple-text)}
+  .us-path-detail{font-size:12px;color:var(--text2)}
+  .us-path-connects{font-size:11px;margin-top:4px;font-weight:600}
+  .us-path-box.pb-blue .us-path-connects{color:var(--blue-text)}
+  .us-path-box.pb-green .us-path-connects{color:var(--green-text)}
+  .us-path-box.pb-amber .us-path-connects{color:var(--amber-text)}
+
+  @media(max-width:620px){
+    .us-bilingual{grid-template-columns:1fr}
+    .us-path-box{min-width:120px}
+  }
+
+  /* ── RESPONSIVE: MOBILE ─────────────────────────────── */
+  @media(max-width:620px){
+
+    /* Header */
+    h1{font-size:18px}
+    .subtitle{font-size:12px}
+    .header-top{gap:10px}
+
+    /* Tabs: scroll horizontally, never wrap */
+    .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:0}
+    .tabs::-webkit-scrollbar{display:none}
+    .tab{font-size:13px;padding:10px 14px;min-height:44px;display:flex;align-items:center}
+
+    /* Filter buttons: already in scroll wrapper, just ensure no wrap */
+    .filter-btns,.qa-filter{flex-wrap:nowrap}
+    .filter-btn{min-height:36px;white-space:nowrap;flex-shrink:0}
+
+    /* Search bar full width already works */
+    .search-wrap{min-width:0}
+
+    /* Vocab table: 2 columns on mobile.
+       Hide the 3rd <th> and <td>.
+       Show the note inline under the Dutch word instead. */
+    .vocab-table th:nth-child(3),
+    .vocab-table td:nth-child(3){display:none}
+    .kw-note-inline{
+      display:block;
+      font-size:12px;color:var(--text3);
+      font-style:italic;margin-top:3px;
+    }
+
+    /* Bigger tap targets for vocab rows */
+    .vocab-table td{padding:12px 10px}
+
+    /* Q&A: full width meta row wraps below question */
+    .qa-q{flex-direction:column;gap:6px}
+    .qa-q-meta{justify-content:flex-start}
+
+    /* Summary stats: 2 columns */
+    .summary-grid{grid-template-columns:1fr 1fr}
+    .stat-num{font-size:22px}
+
+    /* Theme cards: single column */
+    .theme-grid{grid-template-columns:1fr}
+
+    /* Bump up small fonts */
+    .kw-note,.tc-desc-en,.wi-source{font-size:12px}
+    .ans-note{font-size:13px}
+
+    /* Uitleg: stack layout on mobile */
+    .uitleg-layout{grid-template-columns:1fr}
+    .uitleg-nav{display:none}
+    .uitleg-mobile-sel{display:block}
+    .us-title-nl{font-size:17px}
+    .us-table{font-size:12px}
+    .us-table td:first-child{white-space:normal}
+    .sp-cell{padding:8px 10px;font-size:12px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="header-top">
+      <div>
+        <h1>🇳🇱 KNM Studietool</h1>
+        <p class="subtitle">Kennis van de Nederlandse Maatschappij · Knowledge of Dutch Society · Examen 1 &amp; 2</p>
+      </div>
+      <div class="lang-toggle">
+        <button class="lang-btn active" onclick="setLang('bi')" id="btn-bi">NL + EN</button>
+        <button class="lang-btn" onclick="setLang('nl')" id="btn-nl">NL</button>
+        <button class="lang-btn" onclick="setLang('en')" id="btn-en">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('themes')">Thema's / Themes</div>
+    <div class="tab" onclick="showTab('uitleg')">Uitleg / Explanations</div>
+    <div class="tab" onclick="showTab('vocab')">Woordenschat / Vocabulary</div>
+    <div class="tab" onclick="showTab('qa')">Vragen &amp; Antwoorden / Q&amp;A</div>
+    <div class="tab" onclick="showTab('summary')">Overzicht / Summary</div>
+  </div>
+
+  <!-- THEMES PANEL -->
+  <div class="panel active" id="panel-themes">
+    <div class="theme-grid" id="theme-grid"></div>
+  </div>
+
+  <!-- UITLEG PANEL -->
+  <div class="panel" id="panel-uitleg">
+    <div class="uitleg-layout">
+      <nav class="uitleg-nav" id="uitleg-nav"></nav>
+      <div class="uitleg-content" id="uitleg-content"></div>
+    </div>
+  </div>
+
+  <!-- VOCAB PANEL -->
+  <div class="panel" id="panel-vocab">
+    <div class="vocab-controls">
+      <div class="search-wrap"><input type="search" id="vocab-search" placeholder="Zoek / Search…" oninput="renderVocab()"></div>
+      <div class="filter-scroll"><div class="filter-btns" id="vocab-filters"></div></div>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="vocab-table">
+        <thead><tr><th>Nederlands</th><th>English</th><th>Exam context / examcontext</th></tr></thead>
+        <tbody id="vocab-tbody"></tbody>
+      </table>
+      <p class="no-results" id="vocab-no-results" style="display:none">Geen resultaten / No results.</p>
+    </div>
+  </div>
+
+  <!-- Q&A PANEL -->
+  <div class="panel" id="panel-qa">
+    <div class="note-box">⚠️ <strong>Let op / Note:</strong> Q39 in Exam 2 lists "Rob Jetten" as the correct answer, but Dick Schoof became minister-president in July 2024. The exam may not have been updated yet. The correct answer in real life is <strong>Dick Schoof</strong>.</div>
+    <div class="qa-header">
+      <div class="filter-scroll"><div class="qa-filter" id="qa-filters"></div></div>
+    </div>
+    <div class="qa-cards" id="qa-cards"></div>
+    <p class="no-results" id="qa-no-results" style="display:none">Geen resultaten / No results.</p>
+  </div>
+
+  <!-- SUMMARY PANEL -->
+  <div class="panel" id="panel-summary">
+    <div id="summary-content"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const THEMES = [
+  {id:'t1', emoji:'🗺️', nl:'Geschiedenis en Geografie', en:'History and Geography',
+   desc_nl:'Kennis over de Nederlandse geschiedenis, belangrijke gebeurtenissen en de ligging van Nederland.',
+   desc_en:'Knowledge of Dutch history, key events, and the geography of the Netherlands.',
+   color:'blue'},
+  {id:'t2', emoji:'🏠', nl:'Wonen', en:'Housing',
+   desc_nl:'Alles over huren, kopen, sociale huurwoningen, energiecontracten en woningcorporaties.',
+   desc_en:'Everything about renting, buying, social housing, energy contracts, and housing corporations.',
+   color:'teal'},
+  {id:'t3', emoji:'⚖️', nl:'Staatsinrichting en Rechtsstaat', en:'Government and the Rule of Law',
+   desc_nl:'Hoe Nederland bestuurd wordt: parlement, rechter, kiesrecht, grondwet en EU-lidmaatschap.',
+   desc_en:'How the Netherlands is governed: parliament, judiciary, voting rights, constitution, and EU membership.',
+   color:'purple'},
+  {id:'t4', emoji:'💼', nl:'Werk en Inkomen', en:'Work and Income',
+   desc_nl:'Werken in Nederland: contracten, salaris, uitkeringen, toeslagen en het KvK voor ondernemers.',
+   desc_en:'Working in the Netherlands: contracts, salary, benefits, allowances, and registering a business.',
+   color:'amber'},
+  {id:'t5', emoji:'🏛️', nl:'Instanties', en:'Organisations and Institutions',
+   desc_nl:'Welke overheidsinstantie doet wat: gemeente, SVB, UWV, DUO, Belastingdienst, DigiD.',
+   desc_en:'Which government body does what: municipality, SVB, UWV, DUO, Tax Authority, DigiD.',
+   color:'red'},
+  {id:'t6', emoji:'🎓', nl:'Onderwijs en Opvoeding', en:'Education and Upbringing',
+   desc_nl:'Het Nederlandse onderwijssysteem, leerplicht, schoolniveaus en ouderlijke aansprakelijkheid.',
+   desc_en:'The Dutch education system, compulsory schooling, school levels, and parental liability.',
+   color:'green'},
+  {id:'t7', emoji:'🌷', nl:'Omgangsvormen, Waarden en Normen', en:'Social Norms and Values',
+   desc_nl:'Nederlandse gewoonten, feestdagen, tradities en sociale normen zoals samenwonen en huwelijk.',
+   desc_en:'Dutch customs, public holidays, traditions, and social norms like cohabitation and marriage.',
+   color:'teal'},
+  {id:'t8', emoji:'🏥', nl:'Gezondheid en Gezondheidszorg', en:'Health and Healthcare',
+   desc_nl:'De huisarts als eerste aanspreekpunt, apotheek, verzekering, eigen risico en de rol van de tolk.',
+   desc_en:'The GP as first point of contact, pharmacy, insurance, deductible, and the role of the interpreter.',
+   color:'blue'},
+];
+
+const WORDS = [
+  // T1
+  {t:'t1',nl:'de Deltawerken',en:'Delta Works',note:'Built after the 1953 flood (Watersnoodramp) to protect NL from the sea',exams:[1],wrong:false},
+  {t:'t1',nl:'de Watersnoodramp (1953)',en:'1953 flood disaster',note:'The reason the Deltawerken were built',exams:[1],wrong:false},
+  {t:'t1',nl:'de VN (Verenigde Naties)',en:'United Nations (UN)',note:'Goal: vrede en veiligheid — NOT beter onderwijs',exams:[1],wrong:true},
+  {t:'t1',nl:'vrede en veiligheid',en:'peace and security',note:'The official goal of the UN',exams:[1],wrong:true},
+  {t:'t1',nl:'de hoofdstad',en:'capital city',note:'Amsterdam = hoofdstad; Den Haag = regeringsstad (seat of government)',exams:[1],wrong:false},
+  {t:'t1',nl:'de provincie',en:'province',note:'Amsterdam lies in Noord-Holland (not Utrecht or Zuid-Holland)',exams:[1],wrong:false},
+  {t:'t1',nl:'het Wilhelmus',en:'Dutch national anthem',note:'Oldest national anthem in the world still in use',exams:[1],wrong:false},
+  {t:'t1',nl:'de Holocaust',en:'the Holocaust',note:'Took place during WWII (Tweede Wereldoorlog), not WWI',exams:[1],wrong:false},
+  {t:'t1',nl:'de Tweede Wereldoorlog',en:'Second World War (1939–1945)',note:'Period of the Holocaust; 75% of Dutch Jews were killed',exams:[1,2],wrong:false},
+  {t:'t1',nl:'Bevrijdingsdag',en:'Liberation Day',note:'5 mei / 5 May — celebrates the end of WWII in 1945',exams:[2],wrong:false},
+  {t:'t1',nl:'de kolonie',en:'colony',note:'Suriname was a Dutch colony (not Argentina or Venezuela)',exams:[2],wrong:false},
+  {t:'t1',nl:'Suriname',en:'Suriname',note:'Former Dutch colony in South America',exams:[2],wrong:false},
+  {t:'t1',nl:'de provincie Gelderland',en:'province of Gelderland',note:'Located in the east-centre of the Netherlands (map question)',exams:[2],wrong:false},
+  {t:'t1',nl:'Koningsdag',en:'King\'s Day',note:'27 april / 27 April — birthday celebration of the king',exams:[2],wrong:false},
+  // T2
+  {t:'t2',nl:'het statiegeld',en:'deposit on bottles/cans',note:'Return at a supermarket, not apotheek or gemeente',exams:[1],wrong:false},
+  {t:'t2',nl:'de makelaar',en:'real estate agent',note:'Helps you buy/sell a house — not UWV or uitzendbureau',exams:[1],wrong:false},
+  {t:'t2',nl:'de sociale huurwoning',en:'social housing',note:'Has a maximum rent price — ALWAYS has a contract',exams:[1],wrong:true},
+  {t:'t2',nl:'de maximum huurprijs',en:'maximum rent price',note:'Key feature of social housing; enforced by woningcorporaties',exams:[1],wrong:true},
+  {t:'t2',nl:'de woningcorporatie',en:'housing corporation',note:'Manages social housing; you register here to find a rental',exams:[1,2],wrong:false},
+  {t:'t2',nl:'de wachtlijst',en:'waiting list',note:'Often years long for social housing',exams:[1],wrong:false},
+  {t:'t2',nl:'het energiecontract',en:'energy contract',note:'You arrange this yourself when you move — not the gemeente',exams:[2],wrong:false},
+  {t:'t2',nl:'het Nationaal Storingsnummer',en:'National Outage Number',note:'Call when gas/electricity fails — NOT 112 or gemeente',exams:[2],wrong:false},
+  {t:'t2',nl:'de gasmeter',en:'gas meter',note:'You read the main display number (e.g. 03164) to report usage',exams:[2],wrong:false},
+  {t:'t2',nl:'de huurtoeslag',en:'rent allowance',note:'Apply at de Belastingdienst (not gemeente or woningbouwvereniging)',exams:[2],wrong:false},
+  // T3
+  {t:'t3',nl:'het actief kiesrecht',en:'right to vote',note:'Voting = actief kiesrecht. NOT verplicht (compulsory) in NL',exams:[1],wrong:true},
+  {t:'t3',nl:'het passief kiesrecht',en:'right to stand for election',note:'Being elected, not voting',exams:[1],wrong:true},
+  {t:'t3',nl:'de EU (Europese Unie)',en:'European Union',note:'NL citizens travel freely within EU — no visa needed',exams:[1],wrong:false},
+  {t:'t3',nl:'de grondwet',en:'constitution',note:'Guarantees equal rights, freedom of religion, and more',exams:[1],wrong:false},
+  {t:'t3',nl:'het parlement',en:'parliament',note:'Makes laws (not gemeente or rechter)',exams:[1],wrong:false},
+  {t:'t3',nl:'de Eerste Kamer / Tweede Kamer',en:'Senate / House of Representatives',note:'Two chambers of the Dutch parliament (Staten-Generaal)',exams:[1],wrong:false},
+  {t:'t3',nl:'de rechter',en:'judge',note:'Only the rechter determines punishment — not politie or burgemeester',exams:[1],wrong:true},
+  {t:'t3',nl:'de rechtsstaat',en:'rule of law',note:'Core Dutch value: everyone equal before the law',exams:[1],wrong:false},
+  {t:'t3',nl:'stemmen',en:'to vote',note:'From age 18; NOT verplicht (compulsory) in the Netherlands',exams:[1,2],wrong:false},
+  {t:'t3',nl:'de vrijheid van godsdienst',en:'freedom of religion',note:'You can choose your own religion in NL — guaranteed by grondwet',exams:[2],wrong:false},
+  {t:'t3',nl:'de koning / de minister-president',en:'king / prime minister',note:'King: official duties e.g. visits abroad; NOT making tax rules',exams:[2],wrong:false},
+  {t:'t3',nl:'de gemeenteraadsverkiezingen',en:'municipal council elections',note:'Non-Dutch residents can vote after 5 years of legal residence',exams:[2],wrong:false},
+  {t:'t3',nl:'de nationaliteit',en:'nationality / citizenship',note:'Non-Dutch need 5 years residence to vote in local elections',exams:[2],wrong:false},
+  // T4
+  {t:'t4',nl:'het brutosalaris',en:'gross salary',note:'Before tax — what you receive (netto) is always LESS',exams:[1],wrong:false},
+  {t:'t4',nl:'het nettosalaris',en:'net salary',note:'What lands in your bank account after tax deductions',exams:[1],wrong:false},
+  {t:'t4',nl:'de sollicitatiebrief',en:'cover letter / motivation letter',note:'Sent with your cv — not with a zorgpas',exams:[1],wrong:false},
+  {t:'t4',nl:'het cv (curriculum vitae)',en:'CV / résumé',note:'Always sent together with sollicitatiebrief',exams:[1],wrong:false},
+  {t:'t4',nl:'de kinderopvangtoeslag',en:'childcare allowance',note:'Income-based: more income = LOWER toeslag',exams:[1],wrong:true},
+  {t:'t4',nl:'de toeslag',en:'allowance / subsidy',note:'All toeslagen go down when income goes up',exams:[1,2],wrong:true},
+  {t:'t4',nl:'de WW-uitkering',en:'unemployment benefit',note:'Apply at UWV one week BEFORE your contract ends',exams:[1],wrong:true},
+  {t:'t4',nl:'het UWV',en:'Employee Insurance Agency',note:'Handles WW-uitkering and re-employment support',exams:[1,2],wrong:false},
+  {t:'t4',nl:'de deeltijdbaan',en:'part-time job',note:'Very common in NL — fully legal, no conditions',exams:[1],wrong:false},
+  {t:'t4',nl:'de Kamer van Koophandel (KvK)',en:'Chamber of Commerce',note:'Register here when starting a business — NOT for employees',exams:[1,2],wrong:false},
+  {t:'t4',nl:'het vast contract',en:'permanent contract',note:'No end date — NOT nul-uren or tijdelijk',exams:[1],wrong:true},
+  {t:'t4',nl:'het tijdelijk contract',en:'temporary contract',note:'Has an end date (einddatum)',exams:[1,2],wrong:false},
+  {t:'t4',nl:'het nul-urencontract',en:'zero-hours contract',note:'Called in only when needed — no fixed hours',exams:[1],wrong:true},
+  {t:'t4',nl:'de reiskosten / werktijden',en:'travel costs / working hours',note:'Common subjects in employment contracts (NOT hobby\'s)',exams:[2],wrong:false},
+  {t:'t4',nl:'de IDW (Informatiecentrum Diplomawaardering)',en:'Diploma evaluation centre',note:'Where you get a foreign diploma recognised in NL',exams:[2],wrong:false},
+  {t:'t4',nl:'de personeelsvereniging',en:'staff association',note:'Organises activities for employees — does NOT make work rules',exams:[2],wrong:false},
+  {t:'t4',nl:'de MAP (Module Arbeidsmarkt en Participatie)',en:'Labour Market module',note:'Compulsory part of inburgering — not just a course',exams:[2],wrong:false},
+  {t:'t4',nl:'de arbeidsongeschiktheidsverzekering (AOV)',en:'disability insurance',note:'Pays out when self-employed person is sick for a long time',exams:[2],wrong:false},
+  // T5
+  {t:'t5',nl:'DigiD',en:'digital identity (government login)',note:'Log in securely to government websites — NOT for banking',exams:[1,2],wrong:false},
+  {t:'t5',nl:'de gemeente',en:'municipality / town hall',note:'Register births, deaths, marriages, divorces, address changes, passport, rijbewijs',exams:[1,2],wrong:true},
+  {t:'t5',nl:'de SVB (Sociale Verzekeringsbank)',en:'Social Insurance Bank',note:'Apply for kinderbijslag and AOW pension here',exams:[1],wrong:false},
+  {t:'t5',nl:'de kinderbijslag',en:'child benefit',note:'Apply at SVB — not DUO or zorgverzekeraar',exams:[1],wrong:false},
+  {t:'t5',nl:'het NIBUD',en:'Budget advice institute',note:'Budget advice only — does NOT register life events',exams:[1],wrong:true},
+  {t:'t5',nl:'de Belastingdienst',en:'Tax Authority',note:'File tax returns; also manages toeslagen (incl. huurtoeslag, kinderopvangtoeslag)',exams:[1,2],wrong:false},
+  {t:'t5',nl:'het belastinggeld',en:'tax money',note:'Pays for public services — NOT bank employee salaries',exams:[1],wrong:true},
+  {t:'t5',nl:'het identiteitsbewijs',en:'identity document (ID)',note:'Required from age 14 — must show to police on request',exams:[1],wrong:false},
+  {t:'t5',nl:'het rijbewijs',en:'driving licence',note:'Apply at gemeente after passing rijexamen at CBR',exams:[1],wrong:false},
+  {t:'t5',nl:'het BSN-nummer',en:'citizen service number',note:'Personal ID number — NOT enough alone to log in to government sites',exams:[2],wrong:false},
+  {t:'t5',nl:'de uitkering',en:'benefit / allowance payment',note:'May change if circumstances change (e.g. samenwonen)',exams:[2],wrong:false},
+  {t:'t5',nl:'het Juridisch Loket',en:'Legal Aid centre',note:'Free legal advice on rights and duties — NOT for Dutch lessons',exams:[2],wrong:false},
+  {t:'t5',nl:'belastingaangifte doen',en:'to file a tax return',note:'Often compulsory (verplicht) for individuals and all businesses',exams:[1],wrong:false},
+  // T6
+  {t:'t6',nl:'aansprakelijk',en:'liable / responsible',note:'Parents liable for damage caused by children under 14',exams:[1],wrong:false},
+  {t:'t6',nl:'de leerplicht',en:'compulsory schooling',note:'Starts at age 5 (may start at 4 but not required); ends at 16',exams:[1,2],wrong:true},
+  {t:'t6',nl:'het vmbo',en:'pre-vocational secondary education',note:'Cannot go directly to university — must go via mbo/havo first',exams:[1],wrong:false},
+  {t:'t6',nl:'het mbo',en:'vocational training (MBO)',note:'Level after vmbo; practical job training',exams:[1,2],wrong:false},
+  {t:'t6',nl:'het havo / vwo',en:'higher general / pre-university education',note:'vwo leads to university; havo leads to hbo',exams:[1,2],wrong:false},
+  {t:'t6',nl:'de universiteit / het hbo',en:'university / university of applied sciences',note:'hbo needs havo diploma; universiteit needs vwo diploma',exams:[1,2],wrong:false},
+  {t:'t6',nl:'DUO (Dienst Uitvoering Onderwijs)',en:'Education Executive Agency',note:'Apply for studiefinanciering (student finance) here',exams:[1,2],wrong:false},
+  {t:'t6',nl:'de basisschool / groep 8',en:'primary school / year 8',note:'After groep 8, children go to voortgezet onderwijs (vmbo/havo/vwo)',exams:[2],wrong:false},
+  // T7
+  {t:'t7',nl:'Eerste Kerstdag (25 december)',en:'Christmas Day (25 December)',note:'26 December = Tweede Kerstdag; both are public holidays',exams:[1],wrong:false},
+  {t:'t7',nl:'Oud en Nieuw',en:'New Year\'s Eve / New Year',note:'Traditional food = oliebollen; NOT pepernoten',exams:[1],wrong:true},
+  {t:'t7',nl:'de oliebollen',en:'fried dough balls',note:'Eaten on Oud en Nieuw — a classic Dutch tradition',exams:[1],wrong:true},
+  {t:'t7',nl:'de pepernoten',en:'spiced biscuits',note:'Eaten at Sinterklaas (5 December) — NOT at Oud en Nieuw',exams:[1],wrong:true},
+  {t:'t7',nl:'Sinterklaas (5 december)',en:'St Nicholas (5 December)',note:'Children receive presents; food = pepernoten, speculaas, chocoladeletters',exams:[1],wrong:false},
+  {t:'t7',nl:'beschuit met muisjes',en:'rusk with anise sprinkles',note:'Eaten when a baby is born',exams:[1],wrong:false},
+  {t:'t7',nl:'samenwonen',en:'cohabiting / living together',note:'Completely legal in NL without being married',exams:[1],wrong:false},
+  {t:'t7',nl:'het samenlevingscontract',en:'cohabitation contract',note:'Optional, NOT required — you can live together without one',exams:[1],wrong:false},
+  {t:'t7',nl:'het homohuwelijk',en:'same-sex marriage',note:'Legal in NL since 2001 — Dat mag.',exams:[2],wrong:false},
+  {t:'t7',nl:'vlag met tas / slagen voor examen',en:'flag with schoolbag = graduation',note:'A Dutch flag with a schoolbag hanging from it means someone passed their exam',exams:[2],wrong:false},
+  {t:'t7',nl:'de afspraak',en:'appointment',note:'If you are late for an appointment, call ahead — do NOT just wait',exams:[2],wrong:false},
+  // T8
+  {t:'t8',nl:'het recept',en:'prescription',note:'Doctor\'s prescription needed for prescription medicines at apotheek',exams:[1],wrong:false},
+  {t:'t8',nl:'de apotheek',en:'pharmacy',note:'Dispenses medicine — needs recept for prescription drugs',exams:[1],wrong:false},
+  {t:'t8',nl:'de huisarts',en:'general practitioner (GP)',note:'ALWAYS first point of contact — not hospital directly',exams:[1,2],wrong:true},
+  {t:'t8',nl:'de verwijzing',en:'referral',note:'GP gives a verwijzing to see a specialist or hospital',exams:[1],wrong:false},
+  {t:'t8',nl:'de toestemming',en:'consent / permission',note:'Medical info only shared with patient\'s explicit toestemming',exams:[1],wrong:false},
+  {t:'t8',nl:'het medisch beroepsgeheim',en:'medical confidentiality',note:'Doctor cannot share your data without consent',exams:[1],wrong:false},
+  {t:'t8',nl:'112',en:'emergency number',note:'Fire, ambulance, police — free, available 24/7',exams:[1,2],wrong:false},
+  {t:'t8',nl:'de tandarts',en:'dentist',note:'You arrange your own tandarts — not gemeente or zorgverzekeraar',exams:[1],wrong:false},
+  {t:'t8',nl:'de tolk',en:'interpreter',note:'GP can arrange a professional tolk if patient doesn\'t speak Dutch',exams:[1],wrong:false},
+  {t:'t8',nl:'het eigen risico',en:'deductible / excess',note:'Amount patient pays themselves before insurance covers the rest',exams:[2],wrong:false},
+  {t:'t8',nl:'het consultatiebureau',en:'child health clinic',note:'Checks the health of babies — does NOT provide childcare or housework',exams:[2],wrong:false},
+  {t:'t8',nl:'de spoedeisende hulp (SEH)',en:'emergency room / A&E',note:'For serious emergencies only — otherwise go to huisarts',exams:[2],wrong:false},
+];
+
+const QA = [
+  // EXAM 1
+  {exam:1,theme:'t1',q:'Waarom zijn de Deltawerken gebouwd?\nWhy were the Delta Works built?',a:'Om Nederland te beschermen tegen de zee.\nTo protect the Netherlands from the sea.',note:'Built after the devastating 1953 Watersnoodramp.',wrong:false},
+  {exam:1,theme:'t1',q:'Wat is het doel van de VN (Verenigde Naties)?\nWhat is the goal of the United Nations?',a:'Vrede en veiligheid.\nPeace and security.',note:'NOT beter onderwijs (education) — that is UNESCO.',wrong:true},
+  {exam:1,theme:'t1',q:'Waar ligt Amsterdam, de hoofdstad van Nederland?\nWhere is Amsterdam, the capital of the Netherlands?',a:'In de provincie Noord-Holland.\nIn the province of Noord-Holland.',note:'Den Haag (South Holland) is the seat of government.',wrong:false},
+  {exam:1,theme:'t1',q:'Wat is het Wilhelmus?\nWhat is the Wilhelmus?',a:'Het Nederlandse volkslied.\nThe Dutch national anthem.',note:'Oldest national anthem in the world still in use.',wrong:false},
+  {exam:1,theme:'t1',q:'Wanneer was de Holocaust?\nWhen did the Holocaust take place?',a:'Tijdens de Tweede Wereldoorlog.\nDuring the Second World War.',note:'1941–1945; about 75% of Dutch Jews were killed.',wrong:false},
+  {exam:1,theme:'t2',q:'Waar kan Wouter een blikje met statiegeld inleveren?\nWhere can Wouter return a can with a deposit?',a:'Bij een supermarkt.\nAt a supermarket.',note:'Return at the statiegeldautomaat inside the supermarket.',wrong:false},
+  {exam:1,theme:'t2',q:'Job en Kelly willen een huis kopen. Wie kan ze helpen?\nJob and Kelly want to buy a house. Who can help?',a:'Een makelaar.\nA real estate agent.',note:'UWV handles benefits; uitzendbureau is for temp work.',wrong:false},
+  {exam:1,theme:'t2',q:'Wat is een sociale huurwoning?\nWhat is a social rental home?',a:'Een woning met een maximum huurprijs.\nA rental home with a maximum rent price.',note:'It ALWAYS has a huurcontract — never without one.',wrong:true},
+  {exam:1,theme:'t3',q:'Sam mag stemmen. Hoe heet dit kiesrecht?\nSam is allowed to vote. What is this voting right called?',a:'Actief kiesrecht.\nActive voting right.',note:'Passief kiesrecht = being elected. Voting is NOT verplicht in NL.',wrong:true},
+  {exam:1,theme:'t3',q:'Moet Chris een visum aanvragen voor België (EU-land)?\nDoes Chris need a visa for Belgium (EU country)?',a:'Nee, dat hoeft niet.\nNo, that is not necessary.',note:'Free movement within the EU — no visa needed.',wrong:false},
+  {exam:1,theme:'t3',q:'Mogen vrouwen in Nederland hetzelfde werk doen als mannen?\nCan women in the Netherlands do the same work as men?',a:'Ja, dat mogen ze.\nYes, they may.',note:'Equal rights are guaranteed by the Dutch constitution.',wrong:false},
+  {exam:1,theme:'t3',q:'Wie mag nieuwe wetten aannemen in Nederland?\nWho may pass new laws in the Netherlands?',a:'Het parlement.\nParliament.',note:'Consists of the Eerste Kamer and Tweede Kamer.',wrong:false},
+  {exam:1,theme:'t3',q:'Wie bepaalt de straf van Maura (rijden zonder rijbewijs)?\nWho determines Maura\'s punishment (driving without a licence)?',a:'De rechter.\nThe judge.',note:'The police stop and report; ONLY the judge punishes.',wrong:true},
+  {exam:1,theme:'t4',q:'Jason\'s brutosalaris is €2.900. Wat krijgt hij op zijn rekening?\nJason\'s gross salary is €2,900. What does he receive in his account?',a:'Minder dan €2.900.\nLess than €2,900.',note:'Tax and social contributions are deducted from bruto to get netto.',wrong:false},
+  {exam:1,theme:'t4',q:'Wat stuur je naar een bedrijf als je solliciteert?\nWhat do you send to a company when you apply for a job?',a:'Een sollicitatiebrief en je cv.\nA cover letter and your CV.',note:'Not a zorgpas — that is irrelevant.',wrong:false},
+  {exam:1,theme:'t4',q:'Maartje verdient meer. Wat gebeurt er met haar kinderopvangtoeslag?\nMaartje earns more. What happens to her childcare allowance?',a:'Haar kinderopvangtoeslag gaat omlaag.\nHer childcare allowance goes down.',note:'All toeslagen decrease when income increases.',wrong:true},
+  {exam:1,theme:'t4',q:'Mark\'s contract eindigt op 31 mei. Wanneer kan hij een uitkering aanvragen?\nMark\'s contract ends May 31. When can he apply for a benefit?',a:'Vanaf 24 mei.\nFrom 24 May.',note:'Apply one week BEFORE the contract ends at the UWV.',wrong:true},
+  {exam:1,theme:'t4',q:'Eva wil een deeltijdbaan. Kan dat in Nederland?\nEva wants a part-time job. Is that possible in the Netherlands?',a:'Ja, dat kan.\nYes, that is possible.',note:'NL has one of the highest part-time work rates in the world.',wrong:false},
+  {exam:1,theme:'t4',q:'Ming wil een schoenenwinkel beginnen. Wat moet zij doen?\nMing wants to start a shoe shop. What must she do?',a:'Ze moet zich inschrijven bij de Kamer van Koophandel.\nShe must register with the Chamber of Commerce.',note:'Required by law when starting any business.',wrong:false},
+  {exam:1,theme:'t4',q:'Mag een werkgever eisen dat je goed Nederlands schrijft?\nCan an employer require you to write good Dutch?',a:'Alleen als het nodig is voor de baan.\nOnly if it is necessary for the job.',note:'Requiring it unnecessarily could be discrimination.',wrong:false},
+  {exam:1,theme:'t4',q:'Lotte heeft een contract zonder einddatum. Wat voor contract is dat?\nLotte has a contract without an end date. What contract is that?',a:'Een vast contract.\nA permanent contract.',note:'Nul-urencontract = no fixed hours; tijdelijk = has an end date.',wrong:true},
+  {exam:1,theme:'t5',q:'Wat kun je met een DigiD?\nWhat can you do with a DigiD?',a:'Veilig inloggen op websites van de overheid.\nSecurely log in to government websites.',note:'Not for banking or job applications.',wrong:false},
+  {exam:1,theme:'t5',q:'Latisha en Koen zijn gescheiden. Waar moeten zij dit doorgeven?\nLatisha and Koen are divorced. Where must they register this?',a:'Bij de gemeente.\nAt the municipality.',note:'All life events (birth, marriage, divorce) go to the gemeente.',wrong:true},
+  {exam:1,theme:'t5',q:'Wat wordt NIET betaald met belastinggeld?\nWhat is NOT paid for with tax money?',a:'De salarissen van bankmedewerkers.\nThe salaries of bank employees.',note:'Banks are private — dijken and WW-uitkeringen ARE paid with tax money.',wrong:true},
+  {exam:1,theme:'t5',q:'Luuk is 15 jaar. Moet hij zijn identiteitsbewijs laten zien aan de politie?\nLuuk is 15. Must he show his ID to the police?',a:'Ja, dat moet hij.\nYes, he must.',note:'From age 14, everyone must carry and show ID when asked.',wrong:false},
+  {exam:1,theme:'t5',q:'Waar vraag je kinderbijslag aan?\nWhere do you apply for child benefit?',a:'Bij de Sociale Verzekeringsbank (SVB).\nAt the Social Insurance Bank (SVB).',note:'SVB also handles AOW pension — not DUO or zorgverzekeraar.',wrong:false},
+  {exam:1,theme:'t5',q:'Erik is geslaagd voor zijn rijexamen. Waar vraagt hij het rijbewijs aan?\nErik passed his driving test. Where does he apply for a driving licence?',a:'Bij de gemeente.\nAt the municipality.',note:'CBR is where you take the test; gemeente issues the rijbewijs.',wrong:false},
+  {exam:1,theme:'t5',q:'Is belastingaangifte doen verplicht?\nIs filing a tax return compulsory?',a:'Ja, dat is vaak verplicht.\nYes, it is often compulsory.',note:'The Belastingdienst will send you a letter if you must file.',wrong:false},
+  {exam:1,theme:'t6',q:'Charlie (12) laat een telefoon vallen. Wie is aansprakelijk voor de kosten?\nCharlie (12) drops a phone. Who is liable for the costs?',a:'De ouders van Charlie.\nCharlie\'s parents.',note:'Parents are liable for damage by children under 14.',wrong:false},
+  {exam:1,theme:'t6',q:'Kan je met een vmbo-diploma meteen naar de universiteit?\nCan you go directly to university with a vmbo diploma?',a:'Nee, dat kan niet.\nNo, that is not possible.',note:'Path: vmbo → mbo, or havo → hbo, or vwo → universiteit.',wrong:false},
+  {exam:1,theme:'t6',q:'Vanaf welke leeftijd moet een kind in Nederland verplicht naar school?\nFrom what age must a child in the Netherlands attend school?',a:'Vanaf 5 jaar.\nFrom age 5.',note:'Children MAY start at 4, but it is only compulsory from age 5.',wrong:true},
+  {exam:1,theme:'t7',q:'Welke feestdag is elk jaar op 25 december?\nWhat holiday is always on 25 December?',a:'Eerste Kerstdag.\nChristmas Day.',note:'26 December = Tweede Kerstdag. Sinterklaas is 5 December.',wrong:false},
+  {exam:1,theme:'t7',q:'Welk eten hoort bij Oud en Nieuw in Nederland?\nWhat food belongs to New Year\'s Eve in the Netherlands?',a:'Oliebollen.\nOliebollen (fried dough balls).',note:'Pepernoten = Sinterklaas. Beschuit met muisjes = new baby.',wrong:true},
+  {exam:1,theme:'t7',q:'Mogen William en Kyra samenwonen zonder getrouwd te zijn?\nMay William and Kyra live together without being married?',a:'Ja, dat mag.\nYes, that is allowed.',note:'Completely legal in NL. A samenlevingscontract is optional.',wrong:false},
+  {exam:1,theme:'t8',q:'Wat heeft de apotheek nodig om Rob medicijnen te geven?\nWhat does the pharmacy need to give Rob his medication?',a:'Een recept van de dokter.\nA prescription from the doctor.',note:'Heart medication is prescription-only — DigiD or insurance papers not needed.',wrong:false},
+  {exam:1,theme:'t8',q:'Mag de vorige huisarts van Els informatie doorgeven aan de nieuwe?\nMay Els\'s previous GP share information with the new one?',a:'Alleen als Els toestemming geeft.\nOnly if Els gives her consent.',note:'Medical confidentiality: info is never shared without patient consent.',wrong:false},
+  {exam:1,theme:'t8',q:'Eva ziet een brand. Welk telefoonnummer belt zij?\nEva sees a fire. What number does she call?',a:'112\n112',note:'European emergency number for fire, police, and ambulance. Free.',wrong:false},
+  {exam:1,theme:'t8',q:'Wie regelt een nieuwe tandarts voor Paul?\nWho arranges a new dentist for Paul?',a:'Paul zelf.\nPaul himself.',note:'You find and register with a tandarts yourself.',wrong:false},
+  {exam:1,theme:'t8',q:'Nadia spreekt geen Nederlands bij de huisarts. Wat doet de huisarts?\nNadia doesn\'t speak Dutch at the GP. What should the GP do?',a:'Een tolk regelen voor Nadia.\nArrange an interpreter for Nadia.',note:'Professional interpreters can be arranged — sending to hospital is wrong.',wrong:false},
+  {exam:1,theme:'t8',q:'Eli heeft hoofdpijn. Met wie moet hij bellen?\nEli has a headache. Who should he call?',a:'Met de huisarts.\nThe general practitioner.',note:'GP is ALWAYS the first point of contact for non-emergencies.',wrong:true},
+  // EXAM 2
+  {exam:2,theme:'t8',q:'Ramish is verhuisd. Hoe krijgt hij een huisarts?\nRamish has moved. How does he get a GP?',a:'Ramish zoekt zelf een huisarts.\nRamish finds a GP himself.',note:'You register yourself with a GP in your area — gemeente does NOT arrange it.',wrong:false},
+  {exam:2,theme:'t8',q:'Eline heeft keelpijn. Het is maandagochtend. Waar maakt ze een afspraak?\nEline has a sore throat. It\'s Monday morning. Where does she make an appointment?',a:'Bij de huisarts.\nAt the GP.',note:'Huisarts = first contact for non-emergency illness.',wrong:false},
+  {exam:2,theme:'t8',q:'De collega van Evy beweegt niet op de grond. Welk nummer belt zij?\nEvy\'s colleague is lying motionless. What number does she call?',a:'Het alarmnummer 112.\nThe emergency number 112.',note:'Unconscious person = emergency. Always 112.',wrong:false},
+  {exam:2,theme:'t8',q:'Wat doet het consultatiebureau voor Nora en haar baby?\nWhat does the child health clinic do for Nora and her baby?',a:'De gezondheid van de baby controleren.\nCheck the health of the baby.',note:'It checks health — does NOT arrange childcare or help with housework.',wrong:false},
+  {exam:2,theme:'t8',q:'Peter\'s bloedonderzoek valt onder zijn eigen risico. Wat betekent dat?\nPeter\'s blood test falls under his deductible. What does that mean?',a:'Peter betaalt de kosten.\nPeter pays the costs.',note:'Eigen risico = you pay the first €385 (2026) of medical costs per year.',wrong:false},
+  {exam:2,theme:'t7',q:'Uit een raam hangt een vlag met een tas. Wat betekent dit?\nA flag with a schoolbag hangs from a window. What does this mean?',a:'Iemand is geslaagd voor school.\nSomeone has passed their exams.',note:'This is a Dutch tradition — hanging the flag + schoolbag to celebrate graduation.',wrong:false},
+  {exam:2,theme:'t7',q:'Alex is een uur te laat voor zijn afspraak bij de huisarts. Wat doet hij?\nAlex is an hour late for his GP appointment. What should he do?',a:'De huisarts bellen.\nCall the GP.',note:'Always call ahead when you are late — do NOT just walk in.',wrong:false},
+  {exam:2,theme:'t7',q:'Arno en Timo zijn twee mannen en willen trouwen. Mag dat?\nArno and Timo are two men and want to marry. Is that allowed?',a:'Dat mag.\nThat is allowed.',note:'Same-sex marriage has been legal in the Netherlands since 2001.',wrong:false},
+  {exam:2,theme:'t5',q:'Nancy zoekt informatie over kinderopvangtoeslag. Welke website?\nNancy wants info about childcare allowance. Which website?',a:'www.belastingdienst.nl\nwww.belastingdienst.nl',note:'Toeslagen are managed by the Belastingdienst, not UWV or KvK.',wrong:false},
+  {exam:2,theme:'t5',q:'Dave en Yara gaan samenwonen. Moeten ze dit melden aan de gemeente?\nDave and Yara are moving in together. Must they notify the gemeente?',a:'Ja, dat is verplicht.\nYes, that is compulsory.',note:'You must register your new address at the gemeente (GBA/BRP).',wrong:false},
+  {exam:2,theme:'t5',q:'Kofi wil een Nederlands paspoort aanvragen. Waar kan hij dat doen?\nKofi wants to apply for a Dutch passport. Where can he do that?',a:'Bij de gemeente.\nAt the municipality.',note:'Passports, ID cards, and rijbewijs are all arranged at the gemeente.',wrong:false},
+  {exam:2,theme:'t5',q:'Mike wil inloggen op het UWV. Wat heeft hij nodig?\nMike wants to log in to the UWV website. What does he need?',a:'Zijn DigiD.\nHis DigiD.',note:'DigiD is needed for ALL government websites — BSN alone is not enough.',wrong:false},
+  {exam:2,theme:'t5',q:'Waar kun je huurtoeslag aanvragen?\nWhere can you apply for rent allowance?',a:'Bij de Belastingdienst.\nAt the Tax Authority.',note:'All toeslagen (huurtoeslag, zorgtoeslag, kinderopvangtoeslag) go via Belastingdienst.',wrong:false},
+  {exam:2,theme:'t5',q:'Aïsha gaat samenwonen. Verandert haar uitkering?\nAïsha moves in with her partner. Does her benefit change?',a:'Haar uitkering verandert misschien.\nHer benefit may change.',note:'Cohabiting can affect means-tested benefits — always report changes.',wrong:false},
+  {exam:2,theme:'t5',q:'Waarbij helpt het Juridisch Loket?\nWhat does the Juridisch Loket help with?',a:'Bij vragen over rechten en plichten.\nWith questions about rights and duties.',note:'Free legal advice. NOT for language lessons or housing searches.',wrong:false},
+  {exam:2,theme:'t4',q:'Josef krijgt een vast contract. Moet hij zich inschrijven bij de KvK?\nJosef gets a permanent contract. Must he register with the KvK?',a:'Nee, dat moeten alleen mensen met een eigen bedrijf.\nNo, only people with their own business must register.',note:'KvK registration is only for self-employed / business owners.',wrong:false},
+  {exam:2,theme:'t4',q:'Welke afspraken maken werkgever en werknemer vaak?\nWhat agreements do employer and employee often make?',a:'Afspraken over reiskosten en werktijden.\nAgreements about travel costs and working hours.',note:'NOT about hobby\'s — those are personal.',wrong:false},
+  {exam:2,theme:'t4',q:'Nadja krijgt een uitkering en wil een cursus doen. Wie helpt haar?\nNadja gets a benefit and wants to do a course. Who can help?',a:'Het UWV.\nThe UWV.',note:'UWV supports job seekers with training and re-employment.',wrong:false},
+  {exam:2,theme:'t4',q:'Carlos wil zijn Amerikaans diploma laten waarderen. Waar kan dit?\nCarlos wants his American diploma recognised in NL. Where?',a:'Bij de IDW.\nAt the IDW (Informatiecentrum Diplomawaardering).',note:'The IDW assesses foreign diplomas for Dutch equivalency.',wrong:false},
+  {exam:2,theme:'t4',q:'Abdel moet zijn uren bijhouden voor het bedrijf. Mag dat?\nAbdel must record his hours for the company. Is that allowed?',a:'Ja, dat mag.\nYes, that is allowed.',note:'Employers can require time tracking for all employees.',wrong:false},
+  {exam:2,theme:'t4',q:'Tami heeft een AOV. Wanneer krijgt zij geld van deze verzekering?\nTami has disability insurance. When does she receive money?',a:'Als ze langere tijd ziek is.\nWhen she is sick for an extended period.',note:'AOV = arbeidsongeschiktheidsverzekering for self-employed people.',wrong:false},
+  {exam:2,theme:'t4',q:'Susanna heeft een tijdelijk contract. Wat is dat?\nSusanna has a temporary contract. What is that?',a:'Een contract met een einddatum.\nA contract with an end date.',note:'Not deeltijdwerk (part-time) — a tijdelijk contract is about duration.',wrong:false},
+  {exam:2,theme:'t4',q:'Wat doet de personeelsvereniging?\nWhat does the staff association do?',a:'Activiteiten organiseren voor werknemers.\nOrganise activities for employees.',note:'Does NOT hire staff or make work rules — that is HR/management.',wrong:false},
+  {exam:2,theme:'t4',q:'Said is aan het inburgeren. Wat is verplicht voor werk?\nSaid is integrating. What is compulsory for work preparation?',a:'De Module Arbeidsmarkt en Participatie (MAP).\nThe Labour Market and Participation Module (MAP).',note:'MAP is a compulsory part of the inburgering programme.',wrong:false},
+  {exam:2,theme:'t2',q:'Alex zoekt een huurhuis. Waar schrijft hij zich in?\nAlex is looking for a rental. Where does he register?',a:'Bij een woningcorporatie.\nAt a housing corporation.',note:'NOT UWV (employment) or uitzendbureau (temp agency).',wrong:false},
+  {exam:2,theme:'t2',q:'Jackie gaat verhuizen. Wie regelt haar energiecontract?\nJackie is moving. Who arranges her energy contract?',a:'Jackie zelf.\nJackie herself.',note:'Energy contracts are your own responsibility when you move.',wrong:false},
+  {exam:2,theme:'t2',q:'Amar merkt dat er geen gas is. Welk nummer belt hij?\nAmar notices there is no gas. What number does he call?',a:'Het Nationaal Storingsnummer.\nThe National Outage Number.',note:'NOT 112 (not an emergency) and NOT the gemeente.',wrong:false},
+  {exam:2,theme:'t2',q:'Dave moet zijn gasgebruik doorgeven. Welk getal op de gasmeter?\nDave must report his gas usage. What number on the meter?',a:'03164\n03164',note:'Read the main display digits on the gasmeter — ignore serial numbers.',wrong:false},
+  {exam:2,theme:'t6',q:'Tot en met welke leeftijd is school verplicht in Nederland?\nUp to what age is school compulsory in the Netherlands?',a:'Tot en met 16 jaar.\nUp to and including age 16.',note:'Full leerplicht is until 16; partial leerplicht until 18.',wrong:false},
+  {exam:2,theme:'t6',q:'Waar kan Emma studiefinanciering aanvragen voor het hbo?\nWhere can Emma apply for student finance for university?',a:'Bij DUO.\nAt DUO.',note:'DUO manages all student finance — not COA or UWV.',wrong:false},
+  {exam:2,theme:'t6',q:'Jamal is in groep 8. Waar kan hij volgend jaar naartoe?\nJamal is in year 8. Where can he go next year?',a:'Naar de havo.\nTo havo.',note:'After basisschool, children go to voortgezet onderwijs: vmbo/havo/vwo. NOT hbo yet.',wrong:false},
+  {exam:2,theme:'t1',q:'Wanneer is Bevrijdingsdag in Nederland?\nWhen is Liberation Day in the Netherlands?',a:'5 mei.\n5 May.',note:'Commemorates the end of WWII in 1945. 4 May = Dodenherdenking (Remembrance Day).',wrong:false},
+  {exam:2,theme:'t1',q:'Wat gebeurde er met Joodse Nederlanders in de Tweede Wereldoorlog?\nWhat happened to Jewish Dutch people during WWII?',a:'Ze moesten naar kampen en werden daar gedood.\nThey were sent to camps and killed there.',note:'The Holocaust — about 102,000 Dutch Jews were murdered.',wrong:false},
+  {exam:2,theme:'t1',q:'Waar ligt de provincie Gelderland?\nWhere is the province of Gelderland?',a:'In het midden-oosten van Nederland.\nIn the east-centre of the Netherlands.',note:'Map question — Gelderland is the largest province, in the east.',wrong:false},
+  {exam:2,theme:'t1',q:'Welk land was vroeger een kolonie van Nederland?\nWhich country was formerly a Dutch colony?',a:'Suriname.\nSuriname.',note:'Also Indonesia (until 1945) and the Dutch Caribbean islands.',wrong:false},
+  {exam:2,theme:'t3',q:'Is stemmen verplicht in Nederland?\nIs voting compulsory in the Netherlands?',a:'Nee, dat is niet verplicht.\nNo, it is not compulsory.',note:'Voting is a right, not a duty. You are allowed to vote from age 18.',wrong:false},
+  {exam:2,theme:'t3',q:'Mag je in Nederland je eigen religie kiezen?\nCan you choose your own religion in the Netherlands?',a:'Ja, dat mag.\nYes, you may.',note:'Freedom of religion is guaranteed by the Dutch constitution (grondwet).',wrong:false},
+  {exam:2,theme:'t3',q:'Wat is een taak van de koning van Nederland?\nWhat is a task of the Dutch king?',a:'Officieel andere landen bezoeken.\nOfficially visiting other countries.',note:'King = ceremonial/representative role. NOT making laws or organising elections.',wrong:false},
+  {exam:2,theme:'t3',q:'Hoe heet de minister-president van Nederland? (Examen 2 — let op: dit kan veranderd zijn)\nWhat is the name of the Dutch prime minister? (Note: this may be outdated)',a:'Rob Jetten (volgens het examen) / Dick Schoof (huidig)\nRob Jetten (per exam) / Dick Schoof (current)',note:'⚠️ The exam shows Rob Jetten, but Dick Schoof became PM in July 2024. In the real exam, check the current PM.',wrong:false},
+  {exam:2,theme:'t3',q:'Hannah heeft niet de NL nationaliteit. Wanneer mag ze bij gemeenteraadsverkiezingen stemmen?\nHannah is not a Dutch citizen. When may she vote in municipal elections?',a:'Als ze vijf jaar in Nederland woont.\nWhen she has lived in the Netherlands for five years.',note:'Non-Dutch EU citizens can also vote in municipal elections; non-EU need 5 years.',wrong:false},
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let lang = 'bi'; // 'nl' | 'en' | 'bi'
+let vocabTheme = 'all';
+let vocabExam = 'all';
+let qaTheme = 'all';
+let qaExam = 'all';
+let qaWrong = false;
+
+// ============================================================
+// HELPERS
+// ============================================================
+const themeMap = {};
+THEMES.forEach(t => themeMap[t.id] = t);
+
+const themeColors = {
+  blue:'badge-blue',teal:'badge-blue',purple:'badge-blue',
+  amber:'badge-blue',red:'badge-red',green:'badge-green'
+};
+
+function wrongCount(themeId) {
+  return WORDS.filter(w => w.t === themeId && w.wrong).length;
+}
+function wordCount(themeId) {
+  return WORDS.filter(w => w.t === themeId).length;
+}
+function qaCount(themeId) {
+  return QA.filter(q => q.theme === themeId).length;
+}
+
+// ============================================================
+// THEMES PANEL
+// ============================================================
+function renderThemes() {
+  const g = document.getElementById('theme-grid');
+  g.innerHTML = THEMES.map(t => {
+    const wc = wordCount(t.id), qc = qaCount(t.id), bad = wrongCount(t.id);
+    return `<div class="theme-card" onclick="jumpToTheme('${t.id}')">
+      <div class="tc-num">Thema ${t.id.slice(1)}</div>
+      <div class="tc-title">${t.nl}</div>
+      <div class="tc-en">${t.en}</div>
+      <div class="tc-desc-nl">${t.desc_nl}</div>
+      ${lang!=='nl'?`<div class="tc-desc-en">${t.desc_en}</div>`:''}
+      <div class="tc-meta">
+        <span class="badge badge-blue">${wc} woorden</span>
+        <span class="badge badge-blue">${qc} vragen</span>
+        ${bad>0?`<span class="badge badge-red">⚠ ${bad} review</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function jumpToTheme(id) {
+  activeExplanation = id;
+  showTab('uitleg');
+}
+
+// ============================================================
+// VOCAB PANEL
+// ============================================================
+function renderVocabFilters() {
+  const c = document.getElementById('vocab-filters');
+  const themes = [['all','Alle thema\'s / All'],['wrong','⚠ Review'],...THEMES.map(t=>[t.id,'T'+t.id.slice(1)+' '+t.nl.split(' ')[0]])];
+  c.innerHTML = themes.map(([id,label])=>`<button class="filter-btn${vocabTheme===id?' active':''}" onclick="setVocabTheme('${id}')">${label}</button>`).join('')
+    + `<button class="filter-btn${vocabExam==='all'?' active':''}" onclick="setVocabExam('all')">Alle examens</button>`
+    + `<button class="filter-btn${vocabExam==='1'?' active':''}" onclick="setVocabExam('1')">Examen 1</button>`
+    + `<button class="filter-btn${vocabExam==='2'?' active':''}" onclick="setVocabExam('2')">Examen 2</button>`;
+}
+
+function setVocabTheme(id) { vocabTheme=id; renderVocabFilters(); renderVocab(); }
+function setVocabExam(e) { vocabExam=e; renderVocabFilters(); renderVocab(); }
+
+function renderVocab() {
+  const q = document.getElementById('vocab-search').value.toLowerCase().trim();
+  let data = WORDS.filter(w => {
+    if (vocabTheme === 'wrong') return w.wrong;
+    if (vocabTheme !== 'all') return w.t === vocabTheme;
+    return true;
+  }).filter(w => {
+    if (vocabExam === 'all') return true;
+    return w.exams.includes(parseInt(vocabExam));
+  }).filter(w => {
+    if (!q) return true;
+    return w.nl.toLowerCase().includes(q)||w.en.toLowerCase().includes(q)||w.note.toLowerCase().includes(q);
+  });
+
+  const tbody = document.getElementById('vocab-tbody');
+  const noR = document.getElementById('vocab-no-results');
+  tbody.innerHTML = '';
+  if (!data.length){ noR.style.display='block'; return; }
+  noR.style.display='none';
+
+  let lastTheme = '';
+  data.forEach(w => {
+    if ((vocabTheme==='all'||vocabTheme==='wrong') && w.t !== lastTheme) {
+      const th = themeMap[w.t];
+      const tr = document.createElement('tr');
+      tr.className = 'section-header';
+      tr.innerHTML = `<td colspan="3">T${w.t.slice(1)} · ${th.nl} / ${th.en}</td>`;
+      tbody.appendChild(tr);
+      lastTheme = w.t;
+    }
+    const tr = document.createElement('tr');
+    const examTags = w.exams.map(e=>`<span class="etag etag-${e}">Examen ${e}</span>`).join('');
+    const wrongTag = w.wrong ? `<span class="wrong-tag">⚠ review</span>` : '';
+    tr.innerHTML = `
+      <td><div class="kw-nl">${w.nl}${wrongTag}</div><div class="exam-tags">${examTags}</div><span class="kw-note-inline">${w.note}</span></td>
+      <td><div class="kw-en">${w.en}</div></td>
+      <td><div class="kw-note">${w.note}</div></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ============================================================
+// Q&A PANEL
+// ============================================================
+function renderQAFilters() {
+  const c = document.getElementById('qa-filters');
+  const themes = [['all','Alle thema\'s'],...THEMES.map(t=>[t.id,'T'+t.id.slice(1)])];
+  c.innerHTML = themes.map(([id,label])=>`<button class="filter-btn${qaTheme===id?' active':''}" onclick="setQATheme('${id}')">${label}</button>`).join('')
+    + `<button class="filter-btn${qaExam==='all'?' active':''}" onclick="setQAExam('all')">Alle examens</button>`
+    + `<button class="filter-btn${qaExam==='1'?' active':''}" onclick="setQAExam('1')">Examen 1</button>`
+    + `<button class="filter-btn${qaExam==='2'?' active':''}" onclick="setQAExam('2')">Examen 2</button>`
+    + `<button class="filter-btn${qaWrong?' active':''}" onclick="toggleQAWrong()">⚠ Foute antwoorden</button>`;
+}
+
+function setQATheme(id){ qaTheme=id; renderQAFilters(); renderQA(); }
+function setQAExam(e){ qaExam=e; renderQAFilters(); renderQA(); }
+function toggleQAWrong(){ qaWrong=!qaWrong; renderQAFilters(); renderQA(); }
+
+function renderQA() {
+  let data = QA.filter(q => {
+    if (qaTheme !== 'all' && q.theme !== qaTheme) return false;
+    if (qaExam !== 'all' && q.exam !== parseInt(qaExam)) return false;
+    if (qaWrong && !q.wrong) return false;
+    return true;
+  });
+  const cont = document.getElementById('qa-cards');
+  const noR = document.getElementById('qa-no-results');
+  if (!data.length){ cont.innerHTML=''; noR.style.display='block'; return; }
+  noR.style.display='none';
+  const th = themeMap;
+  cont.innerHTML = data.map((q,i) => {
+    const lines = q.q.split('\n');
+    const alines = q.a.split('\n');
+    const qText = lang==='nl'?lines[0]:lang==='en'?(lines[1]||lines[0]):lines.join('<br>');
+    const aText = lang==='nl'?alines[0]:lang==='en'?(alines[1]||alines[0]):alines.join('<br>');
+    const t = th[q.theme];
+    return `<div class="qa-card" id="qc${i}">
+      <div class="qa-q" onclick="toggleQA(${i})">
+        <div class="qa-q-text">${qText}</div>
+        <div class="qa-q-meta">
+          <span class="badge badge-blue">T${q.theme.slice(1)}</span>
+          <span class="badge badge-blue">E${q.exam}</span>
+          ${q.wrong?'<span class="wrong-tag">⚠ review</span>':''}
+          <span class="qa-chevron">▼</span>
+        </div>
+      </div>
+      <div class="qa-answer">
+        <div class="ans-correct">
+          <div class="ans-label">✓ Correct antwoord / Correct answer</div>
+          <div class="ans-text">${aText}</div>
+        </div>
+        <div class="ans-note">${q.note}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleQA(i) {
+  const card = document.getElementById('qc'+i);
+  card.classList.toggle('open');
+}
+
+// ============================================================
+// EXPLANATIONS DATA — fully bilingual
+// ============================================================
+const EXPLANATIONS = [
+
+ // ── T1 ─────────────────────────────────────────────────────
+ {id:'t1', emoji:'🗺️', difficulty:'easy', blocks:[
+  {type:'bilingual', title:'Nationale feestdagen / National holidays',
+   nl:`De volgende data zijn <strong>gegarandeerde examenstof</strong>. Leer ze allemaal uit je hoofd.<br><br>
+<strong>27 april — Koningsdag</strong>: Verjaardag van de koning. Oranje kleding, muziek, vrijmarkt.<br>
+<strong>4 mei — Dodenherdenking</strong>: Herdenking van WOII-slachtoffers. Om 20:00 twee minuten stilte. Vlag halfstok.<br>
+<strong>5 mei — Bevrijdingsdag</strong>: Bevrijding van de Duitse bezetting in 1945. Festivals door het hele land.<br>
+<strong>25 december — Eerste Kerstdag</strong>: 26 december = Tweede Kerstdag. Beide zijn officiële vrije dagen.<br>
+<strong>5 december — Sinterklaasavond</strong>: Kinderen krijgen cadeautjes. Eten: pepernoten, chocoladeletters, speculaas.<br><br>
+⚠️ Het examen verwarrt graag 4 mei en 5 mei, en 27 april en 5 mei. Leer het verschil!`,
+   en:`These dates are <strong>guaranteed exam material</strong>. Memorise all of them.<br><br>
+<strong>27 April — King's Day</strong>: The king's birthday. Orange clothing, music, free outdoor markets.<br>
+<strong>4 May — Remembrance Day</strong>: Commemoration of WWII victims. 2-minute silence at 20:00. Flag at half-mast.<br>
+<strong>5 May — Liberation Day</strong>: Liberation from German occupation in 1945. Festivals nationwide.<br>
+<strong>25 December — Christmas Day</strong>: 26 December = Second Christmas Day. Both are public holidays.<br>
+<strong>5 December — St Nicholas Eve</strong>: Children receive gifts. Food: pepernoten, chocolate letters, speculaas.<br><br>
+⚠️ The exam loves to confuse 4 May and 5 May, and 27 April and 5 May. Learn the difference!`},
+  {type:'bilingual', title:'WOII en de Holocaust / WWII and the Holocaust',
+   nl:`Nederland was bezet door nazi-Duitsland van <strong>1940 tot 1945</strong>. Ongeveer <strong>75% van de Joodse Nederlanders</strong> werd vermoord — een van de hoogste percentages in bezet Europa. <strong>Anne Frank</strong> is het bekendste slachtoffer. De bevrijding was op <strong>5 mei 1945</strong>.`,
+   en:`The Netherlands was occupied by Nazi Germany from <strong>1940 to 1945</strong>. About <strong>75% of Dutch Jews</strong> were murdered — one of the highest rates in occupied Europe. <strong>Anne Frank</strong> is the most famous victim. Liberation came on <strong>5 May 1945</strong>.`},
+  {type:'bilingual', title:'Willem van Oranje / William of Orange',
+   nl:`<strong>Vader des Vaderlands</strong>. Leidde de Nederlandse opstand tegen Spanje in de 16e eeuw. Het koningshuis (Huis van Oranje-Nassau) stamt van hem af. Het <strong>Wilhelmus</strong> — het volkslieed — is geschreven vanuit zijn perspectief. Het is het oudste nationale volkslied ter wereld dat nog in gebruik is.`,
+   en:`<strong>Father of the Fatherland</strong>. Led the Dutch revolt against Spain in the 16th century. The royal family (House of Orange-Nassau) descends from him. The <strong>Wilhelmus</strong> — the national anthem — is written from his perspective. It is the oldest national anthem in the world still in use.`},
+  {type:'bilingual', title:'Kolonies / Dutch colonies',
+   nl:`<strong>Suriname</strong> (Zuid-Amerika, onafhankelijk 1975) was een Nederlandse kolonie. <strong>Indonesië</strong> werd onafhankelijk in 1945. De <strong>Caribische eilanden</strong> (Aruba, Curaçao, Bonaire) zijn nog deel van het Koninkrijk. Het examen vraagt welk land een kolonie was — het antwoord is altijd <strong>Suriname</strong>, niet Argentinië of Venezuela.`,
+   en:`<strong>Suriname</strong> (South America, independent 1975) was a Dutch colony. <strong>Indonesia</strong> became independent in 1945. The <strong>Caribbean islands</strong> (Aruba, Curaçao, Bonaire) are still part of the Kingdom. The exam asks which country was a colony — the answer is always <strong>Suriname</strong>, not Argentina or Venezuela.`},
+  {type:'bilingual', title:'Geografie / Geography',
+   nl:`Nederland heeft <strong>12 provincies</strong>. <strong>Amsterdam</strong> (Noord-Holland) is de hoofdstad. <strong>Den Haag</strong> (Zuid-Holland) is de regeringsstad — hier vergadert het parlement. <strong>Gelderland</strong> ligt in het oosten. <strong>Zeeland</strong> ligt in het zuidwesten, waar de Deltawerken zijn — gebouwd na de Watersnoodramp van 1953 waarbij bijna 2.000 mensen stierven.`,
+   en:`The Netherlands has <strong>12 provinces</strong>. <strong>Amsterdam</strong> (Noord-Holland) is the capital. <strong>The Hague</strong> (Zuid-Holland) is the seat of government — parliament meets here. <strong>Gelderland</strong> is in the east. <strong>Zeeland</strong> is in the southwest, where the Delta Works are — built after the 1953 flood that killed nearly 2,000 people.`},
+  {type:'bilingual', title:'De VN / The United Nations',
+   nl:`Nederland is lid van de <strong>VN (Verenigde Naties)</strong>. Het doel van de VN is <strong>vrede en veiligheid</strong>. Niet onderwijs — dat is UNESCO. Dit is een veelgemaakte examenfout.`,
+   en:`The Netherlands is a member of the <strong>UN (United Nations)</strong>. The goal of the UN is <strong>peace and security</strong>. Not education — that is UNESCO. This is a very common exam mistake.`},
+  {type:'examples', items:[
+   {nl:'4 mei = Dodenherdenking (stilte, halfstok); 5 mei = Bevrijdingsdag (feest).',en:'4 May = Remembrance Day (silence, half-mast); 5 May = Liberation Day (celebration).'},
+   {nl:'De Deltawerken beschermen Nederland tegen de zee.',en:'The Delta Works protect the Netherlands from the sea.'},
+   {nl:'Het doel van de VN is vrede en veiligheid — niet onderwijs.',en:'The goal of the UN is peace and security — not education.'},
+  ]},
+ ]},
+ // ── T2 ─────────────────────────────────────────────────────
+ {id:'t2', emoji:'🏠', difficulty:'medium', blocks:[
+  {type:'bilingual', title:'BRP-inschrijving / Address registration',
+   nl:`Als je verhuist in Nederland, moet je je binnen <strong>5 dagen</strong> inschrijven bij de gemeente in de <strong>BRP (Basisregistratie Personen)</strong>. Dit geldt bij elke verhuizing, ook binnen dezelfde stad.`,
+   en:`When you move in the Netherlands, you must register at the gemeente in the <strong>BRP (Personal Records Database)</strong> within <strong>5 days</strong>. This applies to every move, even within the same city.`},
+  {type:'deflist', title:'Begrippen wonen / Housing vocabulary',
+   items:[
+    {term:'Sociale huurwoning / Social housing',desc:'NL: Max. huurprijs (~€880/mnd in 2026), beheerd door een woningcorporatie. Altijd een huurcontract. Lange wachtlijst. | EN: Maximum rent price, managed by a housing corporation. Always has a rental contract. Long waiting list.'},
+    {term:'Woningcorporatie / Housing corporation',desc:'NL: Beheert sociale huurwoningen. Schrijf je hier in als woningzoekende. | EN: Manages social housing. Register here as a housing seeker.'},
+    {term:'Huurcommissie / Rental tribunal',desc:'NL: Gratis, onafhankelijk — voor huurgeschillen. | EN: Free, independent — for rental disputes.'},
+    {term:'Makelaar / Estate agent',desc:'NL: Helpt bij kopen/verkopen van een woning. | EN: Helps buy or sell a house.'},
+    {term:'Notaris / Notary',desc:'NL: Maakt huisaankoop juridisch bindend. | EN: Makes a house purchase legally binding.'},
+    {term:'Statiegeld / Deposit',desc:'NL: Borg op flessen/blikjes — inleveren bij de supermarkt. | EN: Deposit on bottles/cans — return at the supermarket machine.'},
+    {term:'Nationaal Storingsnummer',desc:'NL: Bel bij gas/elektra storing — NIET 112. | EN: Call when gas/electricity fails — NOT 112.'},
+    {term:'Energiecontract',desc:'NL: Je regelt dit zelf bij verhuizing. Niemand doet dit voor je. | EN: You arrange this yourself when you move. Nobody does it for you.'},
+   ]},
+  {type:'bilingual', title:'Huurrecht / Rent law',
+   nl:`Verhuurders kunnen huur <strong>niet zomaar verhogen</strong>. Er zijn wettelijke grenzen. Bij een geschil over huurprijs of onderhoud ga je naar de <strong>Huurcommissie</strong> — gratis en onafhankelijk.`,
+   en:`Landlords <strong>cannot raise rent whenever they want</strong>. Legal limits apply. For a dispute about rent level or maintenance, go to the <strong>Huurcommissie</strong> — free and independent.`},
+  {type:'bilingual', title:'Gasmeter lezen / Reading a gas meter',
+   nl:`Het examen toont soms een foto van een gasmeter. Lees alleen de <strong>hoofddisplay</strong> — de grote, zwarte cijfers. Negeer serienummers en modelcodes op de zijkant.`,
+   en:`The exam sometimes shows a photo of a gas meter. Read only the <strong>main display</strong> — the large black digits. Ignore serial numbers and model codes on the side.`},
+  {type:'examples', items:[
+   {nl:'Je moet je inschrijven in de BRP binnen 5 dagen na verhuizing.',en:'You must register in the BRP within 5 days of moving.'},
+   {nl:'Bij een huurgeschil ga je naar de Huurcommissie — gratis en onafhankelijk.',en:'For a rental dispute go to the Huurcommissie — free and independent.'},
+   {nl:'Een sociale huurwoning heeft altijd een maximum huurprijs én een huurcontract.',en:'Social housing always has a maximum rent price and a rental contract.'},
+   {nl:'Bij een gasstoring bel je het Nationaal Storingsnummer — niet 112.',en:'For a gas outage call the National Outage Number — not 112.'},
+  ]},
+ ]},
+ // ── T3 ─────────────────────────────────────────────────────
+ {id:'t3', emoji:'⚖️', difficulty:'hard', blocks:[
+  {type:'deflist', title:'Drie niveaus van overheid / Three levels of government',
+   items:[
+    {term:'Rijk (nationaal) / National',desc:'NL: Nationale wetten, belastingen, defensie, buitenlandse politiek. | EN: National laws, taxes, defence, foreign policy.'},
+    {term:'Provincie / Province',desc:'NL: Ruimtelijke ordening, natuur, waterbeheer. | EN: Spatial planning, nature, water management.'},
+    {term:'Gemeente / Municipality',desc:'NL: BRP-inschrijving, bijstand, vergunningen, paspoort, rijbewijs. | EN: Address registration, social assistance, permits, passport, driving licence.'},
+   ]},
+  {type:'deflist', title:'Het parlement / Parliament',
+   items:[
+    {term:'Tweede Kamer',desc:'NL: 150 leden, direct gekozen door burgers (elke 4 jaar). Stelt wetten voor en stemt erover. Belangrijkste kamer. | EN: 150 members, directly elected by citizens every 4 years. Proposes and votes on laws. Most important chamber.'},
+    {term:'Eerste Kamer',desc:'NL: 75 leden, indirect gekozen. Controleert wetten maar kan ze niet wijzigen. | EN: 75 members, indirectly elected. Reviews laws but cannot change them.'},
+   ]},
+  {type:'bilingual', title:'De koning en de minister-president / The king and PM',
+   nl:`De koning heeft een <strong>ceremoniële rol</strong>: opent parlement op <strong>Prinsjesdag</strong> (3e dinsdag september), maakt staatsbezoeken, ondertekent wetten. Hij maakt <strong>geen</strong> beleid of belastingregels.<br><br>De <strong>minister-president</strong> leidt de regering. Huidig: <strong>Dick Schoof</strong> (sinds juli 2024). Let op: het examen kan een verouderde naam tonen.`,
+   en:`The king has a <strong>ceremonial role</strong>: opens parliament on <strong>Prinsjesdag</strong> (3rd Tuesday September), makes state visits, signs laws. He does <strong>NOT</strong> make policy or tax rules.<br><br>The <strong>prime minister</strong> leads the government. Current: <strong>Dick Schoof</strong> (since July 2024). Note: the exam may show an outdated name.`},
+  {type:'bilingual', title:'Stemmen en kiesrecht / Voting rights',
+   nl:`Stemmen vanaf <strong>18 jaar</strong>. <strong>Actief kiesrecht</strong> = recht om te stemmen. <strong>Passief kiesrecht</strong> = recht om je verkiesbaar te stellen. Stemmen is <strong>niet verplicht</strong> in Nederland. Niet-Nederlanders: stemrecht bij gemeenteraadsverkiezingen na <strong>5 jaar</strong> legaal verblijf.`,
+   en:`Vote from age <strong>18</strong>. <strong>Actief kiesrecht</strong> = right to vote. <strong>Passief kiesrecht</strong> = right to stand for election. Voting is <strong>NOT compulsory</strong>. Non-Dutch residents may vote in local elections after <strong>5 years</strong> of legal residence.`},
+  {type:'bilingual', title:'Rechtsstaat / Rule of law',
+   nl:`Alleen een <strong>rechter</strong> kan een straf opleggen. De politie kan aanhouden maar <strong>niet straffen</strong>. Iedereen is gelijk voor de wet. Vanaf <strong>14 jaar</strong> moet je ID bij je hebben. Je hebt recht op een <strong>advocaat</strong> als je wordt aangehouden.`,
+   en:`Only a <strong>judge (rechter)</strong> can impose punishment. The police can detain but <strong>cannot punish</strong>. Everyone is equal before the law. From age <strong>14</strong> you must carry ID. You have the right to a <strong>lawyer (advocaat)</strong> if arrested.`},
+  {type:'deflist', title:'Andere organen / Other bodies',
+   items:[
+    {term:'Nationale Ombudsman',desc:'NL: Gratis, onafhankelijk orgaan voor klachten over overheidsorganisaties. Als je er niet uitkomt met de overheid, ga je hier naartoe. | EN: Free, independent body for complaints about government organisations. Go here if you cannot resolve a complaint with a government body.'},
+    {term:'Vrijheid van godsdienst / Freedom of religion',desc:'NL: Je kiest je eigen religie. Niemand kan je dwingen. Vastgelegd in de grondwet. | EN: You freely choose your own religion. Nobody can force you. Guaranteed by the constitution.'},
+    {term:'EU-lidmaatschap / EU membership',desc:'NL: Nederlanders reizen, wonen en werken vrij in alle EU-landen — geen visum. | EN: Dutch citizens travel, live, and work freely in all EU countries — no visa needed.'},
+   ]},
+  {type:'examples', items:[
+   {nl:'Alleen de rechter bepaalt de straf — niet de politie, niet de burgemeester.',en:'Only the judge determines punishment — not the police, not the mayor.'},
+   {nl:'Stemmen is een recht, geen plicht — het is NIET verplicht.',en:'Voting is a right, not a duty — it is NOT compulsory.'},
+   {nl:'Actief kiesrecht = stemmen; passief kiesrecht = jezelf verkiesbaar stellen.',en:'Actief = voting; passief = standing for election.'},
+   {nl:'De Nationale Ombudsman behandelt klachten over overheidsinstanties.',en:'The National Ombudsman handles complaints about government organisations.'},
+  ]},
+ ]},
+ // ── T4 ─────────────────────────────────────────────────────
+ {id:'t4', emoji:'💼', difficulty:'hard', blocks:[
+  {type:'deflist', title:'Salaris / Salary',
+   items:[
+    {term:'Brutosalaris / Gross salary',desc:'NL: Salaris vóór aftrek. Wat in je contract staat. | EN: Salary before deductions. What is agreed in your contract.'},
+    {term:'Nettosalaris / Net salary',desc:'NL: Wat je op je rekening krijgt. Altijd minder dan bruto. | EN: What you receive in your bank account. Always less than gross.'},
+    {term:'Loonstrook / Payslip',desc:'NL: Toont bruto, alle aftrekposten (belasting + pensioenbijdrage) en netto. | EN: Shows gross, all deductions (tax + pension), and net salary.'},
+   ]},
+  {type:'deflist', title:'Contracten / Contract types',
+   items:[
+    {term:'Vast contract / Permanent',desc:'NL: Geen einddatum. Na 3 tijdelijke contracten heb je recht op een vast contract. | EN: No end date. After 3 temporary contracts you are entitled to one.'},
+    {term:'Tijdelijk contract / Temporary',desc:'NL: Heeft een einddatum. | EN: Has an end date (einddatum).'},
+    {term:'Nul-urencontract / Zero-hours',desc:'NL: Opgeroepen als er werk is. Geen garantie op uren. | EN: Called in when needed. No guaranteed hours.'},
+    {term:'Deeltijdcontract / Part-time',desc:'NL: Heel gewoon in Nederland — volledig legaal. | EN: Very common in the Netherlands — fully legal.'},
+    {term:'CAO (collectieve arbeidsovereenkomst)',desc:'NL: Afspraken per sector over loon en arbeidsvoorwaarden. | EN: Sector-wide agreement on wages and working conditions.'},
+   ]},
+  {type:'bilingual', title:'Uitkering bij werkloosheid / Unemployment benefit',
+   nl:`Als je je baan verliest, vraag je een <strong>WW-uitkering</strong> aan bij het <strong>UWV</strong> — <strong>één week vóór</strong> het einde van je contract. Nooit wachten tot erna. Als je niet in aanmerking komt, ga je naar de <strong>gemeente</strong> voor <strong>bijstand</strong>.`,
+   en:`When you lose your job, apply for a <strong>WW-uitkering</strong> at the <strong>UWV</strong> — <strong>one week before</strong> your contract ends. Never wait until after. If you do not qualify, go to the <strong>gemeente</strong> for <strong>bijstand</strong> (social assistance).`},
+  {type:'bilingual', title:'Arboarts (bedrijfsarts) / Company doctor',
+   nl:`Na <strong>6 weken ziekte</strong> moet je werkgever een <strong>arboarts</strong> inschakelen. De arboarts adviseert over terugkeer naar werk — hij behandelt geen ziekte, dat doet de huisarts. ZZP'ers hebben geen automatisch recht op ziektegeld en kunnen een <strong>AOV</strong> afsluiten.`,
+   en:`After <strong>6 weeks of illness</strong>, your employer must involve a <strong>company doctor (arboarts)</strong>. The arboarts advises on returning to work — they do not treat illness, the GP does. Self-employed people have no automatic sick pay and can take out an <strong>AOV</strong> (disability insurance).`},
+  {type:'bilingual', title:'Eigen bedrijf starten / Starting a business',
+   nl:`Verplicht inschrijven bij de <strong>KvK (Kamer van Koophandel)</strong>. Werknemers in loondienst doen dit niet. Tijdelijk werk vinden via een <strong>uitzendbureau</strong>. Buitenlands diploma laten erkennen bij de <strong>IDW</strong>. De <strong>MAP</strong> is verplicht onderdeel van inburgering.`,
+   en:`Mandatory registration at the <strong>KvK (Chamber of Commerce)</strong>. Employees working for a company do not register here. Find temporary work via an <strong>uitzendbureau</strong> (temp agency). Get a foreign diploma recognised at the <strong>IDW</strong>. The <strong>MAP</strong> is a compulsory part of inburgering.`},
+  {type:'deflist', title:'Toeslagen / Allowances (all via Belastingdienst)',
+   items:[
+    {term:'Kinderopvangtoeslag',desc:'NL: Voor werkende ouders met kinderen in de opvang. Daalt als je meer verdient. | EN: For working parents with children in childcare. Decreases as income rises.'},
+    {term:'Huurtoeslag',desc:'NL: Hulp bij huurkosten voor mensen met laag inkomen. | EN: Help with rent costs for low-income people.'},
+    {term:'Zorgtoeslag',desc:'NL: Hulp bij betalen van de zorgverzekeringspremie. | EN: Help paying the health insurance premium.'},
+   ]},
+  {type:'examples', items:[
+   {nl:'WW-uitkering aanvragen bij UWV — één week vóór einde contract.',en:'Apply for WW at the UWV — one week before the contract ends.'},
+   {nl:'Als je meer verdient, krijg je minder toeslag.',en:'If you earn more, you receive less allowance.'},
+   {nl:'Arboarts = advies terugkeer naar werk; huisarts = behandelt de ziekte.',en:'Company doctor = return-to-work advice; GP = treats the illness.'},
+   {nl:'Eigen bedrijf? Verplicht inschrijven bij de KvK.',en:'Own business? Mandatory registration at the KvK.'},
+  ]},
+ ]},
+ // ── T5 ─────────────────────────────────────────────────────
+ {id:'t5', emoji:'🏛️', difficulty:'hard', blocks:[
+  {type:'deflist', title:'Instanties — wie doet wat? / Who does what?',
+   items:[
+    {term:'Gemeente / Municipality',desc:'NL: BRP, paspoort, ID-kaart, rijbewijs, geboorte/huwelijk/scheiding, bijstand, vergunningen. | EN: BRP registration, passport, ID, driving licence, births/marriages/divorces, social assistance, permits.'},
+    {term:'UWV',desc:'NL: WW-uitkering, re-integratie, WIA. NIET voor studiefinanciering of kinderbijslag. | EN: Unemployment benefit (WW), re-employment, WIA (disability). NOT for student finance or child benefit.'},
+    {term:'SVB (Sociale Verzekeringsbank)',desc:'NL: Kinderbijslag, AOW-pensioen, ANW. | EN: Child benefit, AOW state pension, ANW survivor benefit.'},
+    {term:'DUO',desc:'NL: Studiefinanciering, inburgering, diplomawaardering. | EN: Student finance, inburgering admin, diploma recognition.'},
+    {term:'Belastingdienst / Tax Authority',desc:'NL: Belastingaangifte EN alle toeslagen (huurtoeslag, zorgtoeslag, kinderopvangtoeslag). | EN: Tax returns AND all allowances (huurtoeslag, zorgtoeslag, kinderopvangtoeslag).'},
+    {term:'KvK (Kamer van Koophandel)',desc:'NL: Verplichte inschrijving voor ondernemers en ZZP\'ers. Werknemers niet. | EN: Mandatory registration for business owners and self-employed. Employees do not register here.'},
+    {term:'CBR',desc:'NL: Rijexamen (theorie + praktijk). Rijbewijs daarna aanvragen bij de gemeente. | EN: Driving test (theory + practical). Apply for the licence at the gemeente after passing.'},
+    {term:'Juridisch Loket',desc:'NL: Gratis juridisch advies over rechten en plichten. | EN: Free legal advice on rights and duties.'},
+    {term:'Huurcommissie',desc:'NL: Gratis, voor huurgeschillen. | EN: Free, for rental disputes.'},
+    {term:'NIBUD',desc:'NL: Budgetadvies — geen uitkeringen, geen registraties. | EN: Budget advice only — no benefits, no registrations.'},
+    {term:'DigiD',desc:'NL: Nodig voor ALLE overheidssites. BSN alleen is niet genoeg. | EN: Needed for ALL government websites. BSN alone is not enough.'},
+    {term:'COA',desc:'NL: Opvang asielzoekers. | EN: Reception for asylum seekers.'},
+   ]},
+  {type:'tip', content:'<strong>Tip:</strong> Het examen verwart graag: <em>SVB</em> (kinderbijslag) vs <em>Belastingdienst</em> (kinderopvangtoeslag) · <em>CBR</em> (rijexamen) vs <em>gemeente</em> (rijbewijs) · <em>DUO</em> (studiefinanciering) vs <em>UWV</em> (werkloosheid). / <strong>Tip:</strong> The exam deliberately mixes up these pairs. Learn them well.'},
+  {type:'examples', items:[
+   {nl:'Kinderbijslag → SVB. Kinderopvangtoeslag → Belastingdienst.',en:'Child benefit → SVB. Childcare allowance → Belastingdienst.'},
+   {nl:'Rijexamen bij het CBR; rijbewijs aanvragen bij de gemeente.',en:'Driving test at the CBR; apply for the driving licence at the gemeente.'},
+   {nl:'Paspoort → gemeente. Studiefinanciering → DUO. Bijstand → gemeente.',en:'Passport → gemeente. Student finance → DUO. Social assistance → gemeente.'},
+   {nl:'DigiD nodig voor alle overheidssites — BSN alleen is niet genoeg.',en:'DigiD needed for all government sites — BSN alone is not enough.'},
+  ]},
+ ]},
+ // ── T6 ─────────────────────────────────────────────────────
+ {id:'t6', emoji:'🎓', difficulty:'medium', blocks:[
+  {type:'bilingual', title:'Overzicht / Overview',
+   nl:`Het Nederlandse schoolsysteem verdeelt kinderen al op <strong>12 jaar</strong> in niveaus op basis van het <strong>schooladvies</strong> (advies leerkracht na 8 jaar basisschool) en de <strong>Cito-toets</strong>. Dit bepaalt welk voortgezet onderwijs mogelijk is en daarna welk hoger onderwijs.`,
+   en:`The Dutch school system separates children into levels at age <strong>12</strong>, based on the teacher's <strong>schooladvies</strong> (advice after 8 years of primary school) and the <strong>Cito-toets</strong> (national test). This determines which secondary school level is attended and what higher education follows.`},
+  {type:'path', title:'Het volledige schoolpad / Complete school path',
+   rows:[
+    {boxes:[{name:'Basisschool (groep 1–8)',detail:'Leeftijd 4–12 · Leerplicht vanaf 5 jaar / Ages 4–12 · Compulsory from 5',color:'pb-blue',label:'Primair onderwijs / Primary school'}]},
+    {type:'label', text:'↓ Schooladvies + Cito-toets → keuze niveau / choice of level'},
+    {boxes:[
+     {name:'vmbo',detail:'4 jaar / 4 years · leeftijd 12–16',color:'pb-amber',label:'Niveau 1',connects:'mbo'},
+     {name:'havo',detail:'5 jaar / 5 years · leeftijd 12–17',color:'pb-green',label:'Niveau 2',connects:'hbo'},
+     {name:'vwo',detail:'6 jaar / 6 years · leeftijd 12–18',color:'pb-purple',label:'Niveau 3',connects:'universiteit'},
+    ]},
+    {type:'arrow'},
+    {boxes:[
+     {name:'mbo (niv. 1–4)',detail:'1–4 jaar · leeftijd 16+',color:'pb-amber',label:'Beroepsonderwijs / Vocational',connects:'werk / work (of hbo via niv.4)'},
+     {name:'hbo',detail:'4 jaar · leeftijd 18+',color:'pb-green',label:'Hogeschool / Applied univ.',connects:'werk / work (of master)'},
+     {name:'Universiteit',detail:'3+1/2 jaar · leeftijd 18+',color:'pb-purple',label:'Wetenschappelijk / Research univ.',connects:'werk / work (of promotie)'},
+    ]},
+   ]},
+  {type:'bilingual', title:'Basisschool',
+   nl:`Kinderen mogen starten op <strong>4 jaar</strong>, leerplicht begint op <strong>5 jaar</strong>. Groep 1–2: spelend leren. Groep 3: formeel leren lezen, schrijven, rekenen. Einde <strong>groep 8</strong> (leeftijd 11–12): schooladvies + Cito-toets bepalen het niveau voortgezet onderwijs.`,
+   en:`Children may start at age <strong>4</strong>, compulsory from age <strong>5</strong>. Years 1–2: play-based learning. Year 3: formal reading, writing, maths. End of <strong>year 8</strong> (age 11–12): teacher's advice + Cito test determine the secondary school level.`},
+  {type:'bilingual', title:'vmbo',
+   nl:`Voorbereiding op <strong>praktisch en vakgericht werk</strong>. Duur: <strong>4 jaar</strong> (12–16). Vier sub-niveaus: <strong>BB</strong> (meest praktisch) → <strong>KB</strong> → <strong>GL</strong> → <strong>TL</strong> (meest theoretisch). Na vmbo ga je naar <strong>mbo</strong>. Je kunt NIET direct naar havo, vwo of universiteit.`,
+   en:`Preparation for <strong>practical and vocational work</strong>. Duration: <strong>4 years</strong> (ages 12–16). Four sub-levels: <strong>BB</strong> (most practical) → <strong>KB</strong> → <strong>GL</strong> → <strong>TL</strong> (most theoretical). After vmbo you go to <strong>mbo</strong>. You CANNOT go directly to havo, vwo, or university.`},
+  {type:'bilingual', title:'havo',
+   nl:`Voorbereiding op <strong>hoger beroepsonderwijs (hbo)</strong>. Duur: <strong>5 jaar</strong> (12–17). Na havo ga je naar de <strong>hogeschool (hbo)</strong>. Je kunt niet direct naar de wetenschappelijke universiteit.`,
+   en:`Preparation for <strong>applied higher education (hbo)</strong>. Duration: <strong>5 years</strong> (ages 12–17). After havo you go to <strong>hbo</strong>. You cannot go directly to a research university.`},
+  {type:'bilingual', title:'vwo',
+   nl:`Het <strong>hoogste niveau</strong> — bereidt voor op de wetenschappelijke universiteit. Duur: <strong>6 jaar</strong> (12–18). Sub-niveaus: <strong>atheneum</strong> (algemeen academisch) en <strong>gymnasium</strong> (met Latijn en/of Grieks). Na vwo ga je naar de <strong>universiteit</strong> (of kies je voor hbo).`,
+   en:`The <strong>highest level</strong> — prepares students for a research university. Duration: <strong>6 years</strong> (ages 12–18). Sub-levels: <strong>atheneum</strong> (general academic) and <strong>gymnasium</strong> (with Latin and/or Greek). After vwo you go to <strong>university</strong> (or choose hbo).`},
+  {type:'table', title:'MBO — vier niveaus / four levels',
+   headers:['Niveau','Naam / Name','Duur / Duration','Leidt naar / Leads to'],
+   rows:[
+    ['1','Entreeopleiding','1 jaar / year','mbo niveau 2'],
+    ['2','Basisberoepsopleiding','2 jaar / years','Werk / Work (startkwalificatie)'],
+    ['3','Vakopleiding','3 jaar / years','Werk / Work'],
+    ['4','Middenkaderopleiding','3–4 jaar / years','Werk of hbo / Work or hbo'],
+   ]},
+  {type:'bilingual', title:'MBO leerroutes / Learning pathways',
+   nl:`<strong>BOL</strong> (Beroepsopleidende Leerweg): schoolgericht met stages — de meeste studenten. <strong>BBL</strong> (Beroepsbegeleidende Leerweg): werkend leren — grotendeels bij een bedrijf werken, één dag per week naar school. BBL-studenten krijgen salaris.`,
+   en:`<strong>BOL</strong> (school-based with work placements): most students follow this route. <strong>BBL</strong> (work-based): mostly working at a company with one day per week at school. BBL students receive a salary from the employer.`},
+  {type:'bilingual', title:'HBO en Universiteit / HBO and University',
+   nl:`<strong>HBO</strong> (hogeschool): 4-jarige bachelor, praktijkgericht. Toegang met havo-, mbo niv.4- of vwo-diploma. Voorbeelden: verpleegkunde, pabo, journalistiek.<br><br><strong>Universiteit</strong>: 3-jarige bachelor + 1–2 jaar master, wetenschappelijk. Toegang met vwo-diploma. Voorbeelden: geneeskunde, rechten, psychologie.`,
+   en:`<strong>HBO</strong> (university of applied sciences): 4-year bachelor, practice-oriented. Entry with havo, mbo level 4, or vwo diploma. Examples: nursing, teacher training, journalism.<br><br><strong>University</strong>: 3-year bachelor + 1–2 year master, research-focused. Entry with vwo diploma. Examples: medicine, law, psychology.`},
+  {type:'deflist', title:'Sleutelbegrippen / Key concepts',
+   items:[
+    {term:'Leerplicht / Compulsory schooling',desc:'NL: Verplicht van 5 tot 16 jaar. | EN: Compulsory from age 5 to 16.'},
+    {term:'Kwalificatieplicht',desc:'NL: Van 16 tot 18 jaar: blijf leren tot je een startkwalificatie hebt (mbo niv.2 of havo). | EN: From 16 to 18: stay in education until you have a minimum qualification (mbo level 2 or havo).'},
+    {term:'Startkwalificatie',desc:'NL: Minimale kwalificatie voor de arbeidsmarkt. | EN: Minimum qualification for the labour market.'},
+    {term:'Mentor',desc:'NL: Docent die voortgang en welzijn van middelbare scholier bewaakt — contactpunt voor ouders. | EN: Teacher monitoring secondary student\'s progress and wellbeing — contact point for parents.'},
+    {term:'Aansprakelijkheid ouders / Parental liability',desc:'NL: Ouders zijn aansprakelijk voor schade door kinderen onder de 14 jaar. | EN: Parents are liable for damage caused by children under 14.'},
+    {term:'DUO / Studiefinanciering',desc:'NL: Studiefinanciering aanvragen bij DUO — niet bij UWV of COA. | EN: Apply for student finance at DUO — not at UWV or COA.'},
+    {term:'Consultatiebureau',desc:'NL: Gratis controle voor baby\'s (0–4 jaar): groei en vaccinaties. Geen kinderopvang of huishoudelijke hulp. | EN: Free health checks for babies (0–4): growth and vaccinations. No childcare or housework.'},
+   ]},
+  {type:'examples', items:[
+   {nl:'Na vmbo → mbo. Na havo → hbo. Na vwo → universiteit.',en:'After vmbo → mbo. After havo → hbo. After vwo → university.'},
+   {nl:'Leerplicht begint op 5 jaar, geldt volledig tot 16 jaar.',en:'Compulsory schooling starts at 5, applies fully until 16.'},
+   {nl:'Studiefinanciering aanvragen bij DUO — niet bij het UWV.',en:'Apply for student finance at DUO — not at the UWV.'},
+   {nl:'Ouders aansprakelijk voor schade door kinderen onder 14 jaar.',en:'Parents liable for damage by children under 14.'},
+  ]},
+ ]},
+ // ── T7 ─────────────────────────────────────────────────────
+ {id:'t7', emoji:'🌷', difficulty:'medium', blocks:[
+  {type:'table', title:'Feestdagen en tradities / Holidays and traditions',
+   headers:['Feestdag / Holiday','Datum / Date','Traditie & typisch eten / Tradition & food'],
+   rows:[
+    ['Sinterklaas(avond)','5 december / December','Pepernoten, chocoladeletters, speculaas, surprises, cadeautjes'],
+    ['Eerste Kerstdag / Christmas','25 december / December','Familie, diner — 26 dec = Tweede Kerstdag (also public holiday)'],
+    ['Oud en Nieuw / New Year','31 dec – 1 jan','Oliebollen, appelflappen, vuurwerk / fireworks'],
+    ['Koningsdag / King\'s Day','27 april / April','Oranje kleding / orange clothing, vrijmarkt, muziek, feest'],
+    ['Bevrijdingsdag / Liberation Day','5 mei / May','Festivals, optochten — dag na Dodenherdenking'],
+    ['Dodenherdenking / Remembrance','4 mei / May','Stilte om 20:00 / silence at 20:00, vlag halfstok / flag half-mast'],
+    ['Pasen / Easter','Maart/april (variabel)','Eieren, familie — Eerste én Tweede Paasdag / both days are holidays'],
+    ['Moederdag / Mother\'s Day','2e zondag mei / 2nd Sunday May','Bloemen en cadeautjes / flowers and gifts for mothers'],
+   ]},
+  {type:'tip', content:'<strong>Onthoud / Remember:</strong> Oliebollen = Oud en Nieuw. Pepernoten = Sinterklaas. Beschuit met muisjes = nieuwe baby. Het examen gebruikt deze drie om je te verwarren. / The exam uses these three to confuse you. Memorise the difference.'},
+  {type:'deflist', title:'Vlaggetradities / Flag traditions',
+   items:[
+    {term:'Vlag + schooltas / Flag + schoolbag',desc:'NL: Nederlandse vlag + schooltas uit het raam = iemand is geslaagd voor het eindexamen. Typisch Nederlandse traditie. | EN: Dutch flag + schoolbag from a window = someone passed their final school exams. A uniquely Dutch tradition.'},
+    {term:'Vlag halfstok / Flag at half-mast',desc:'NL: Rouw of herdenking — bijv. 4 mei Dodenherdenking. | EN: Mourning or remembrance — e.g. 4 May Remembrance Day.'},
+   ]},
+  {type:'bilingual', title:'Relaties en huwelijk / Relationships and marriage',
+   nl:`<strong>Homohuwelijk</strong> is legaal in Nederland sinds <strong>2001</strong> — het eerste land ter wereld. Examenvragen: het antwoord is altijd <em>"Dat mag."</em><br><br><strong>Samenwonen</strong> zonder trouwen is volledig legaal en heel gewoon in Nederland. Een <strong>samenlevingscontract</strong> is optioneel.<br><br>Trouwen en scheiden registreer je altijd bij de <strong>gemeente</strong>.`,
+   en:`<strong>Same-sex marriage</strong> has been legal in the Netherlands since <strong>2001</strong> — the first country in the world. Exam answer: always <em>"That is allowed."</em><br><br><strong>Cohabiting</strong> without marriage is completely legal and very common. A <strong>cohabitation contract</strong> is optional — not required.<br><br>Marriage and divorce are always registered at the <strong>gemeente</strong>.`},
+  {type:'deflist', title:'Nederlandse kernwaarden / Core Dutch values',
+   items:[
+    {term:'Gelijkheid / Equality',desc:'NL: Mannen en vrouwen hebben gelijke rechten — vrouwen mogen hetzelfde werk doen. | EN: Men and women have equal rights — women may do the same work as men.'},
+    {term:'Vrijheid van meningsuiting / Freedom of expression',desc:'NL: Je mag zeggen wat je denkt, binnen de grenzen van de wet. | EN: You may say what you think, within the limits of the law.'},
+    {term:'Vrijheid van godsdienst / Freedom of religion',desc:'NL: Je kiest zelf je religie. Vastgelegd in de grondwet. | EN: You choose your own religion freely. Guaranteed by the constitution.'},
+    {term:'Tolerantie / Tolerance',desc:'NL: Lange traditie van acceptatie van verschillende achtergronden en leefstijlen. | EN: Long tradition of accepting different backgrounds, religions, and lifestyles.'},
+    {term:'Directheid / Directness',desc:'NL: Het is normaal en niet onbeleefd om duidelijk te zeggen wat je denkt. | EN: It is normal and not considered rude to say clearly what you think.'},
+   ]},
+  {type:'bilingual', title:'Sociale etiquette / Social etiquette',
+   nl:`Als je te laat bent voor een afspraak, <strong>bel je altijd vooraf</strong>. Je loopt niet zomaar een uur te laat binnen en gaat zitten wachten. Dit geldt voor alle afspraken: huisarts, tandarts, werkgever, etc.`,
+   en:`If you are late for an appointment, <strong>always call ahead</strong>. You do not just walk in an hour late and wait. This applies to all appointments: GP, dentist, employer, etc.`},
+  {type:'examples', items:[
+   {nl:'Oliebollen = Oud en Nieuw; pepernoten = Sinterklaas; beschuit met muisjes = nieuwe baby.',en:'Oliebollen = New Year\'s; pepernoten = Sinterklaas; beschuit met muisjes = new baby.'},
+   {nl:'Vlag + schooltas uit raam = iemand is geslaagd voor het eindexamen.',en:'Flag + schoolbag from window = someone passed their final exams.'},
+   {nl:'Homohuwelijk is legaal in NL sinds 2001 — het antwoord is altijd: dat mag.',en:'Same-sex marriage legal in NL since 2001 — the answer is always: that is allowed.'},
+   {nl:'Te laat voor afspraak? Altijd bellen van tevoren.',en:'Late for an appointment? Always call ahead.'},
+  ]},
+ ]},
+ // ── T8 ─────────────────────────────────────────────────────
+ {id:'t8', emoji:'🏥', difficulty:'easy', blocks:[
+  {type:'deflist', title:'Wanneer bel je wie? / When to contact whom?',
+   items:[
+    {term:'112 — levensgevaar / life-threatening',desc:'NL: Brand, ambulance, politienoodgeval. Alleen bij levensgevaar. Gratis, 24/7. | EN: Fire, ambulance, police emergency. Life-threatening only. Free, 24/7.'},
+    {term:'Huisartsenpost — spoed buiten kantooruren',desc:'NL: Urgent maar niet levensbedreigend, in avonden/weekenden/feestdagen. NIET hetzelfde als de spoedeisende hulp (SEH). | EN: Urgent but not life-threatening, evenings/weekends/holidays. NOT the same as the emergency room (SEH).'},
+    {term:'Huisarts — niet-spoedeisend / non-emergency',desc:'NL: Altijd eerste aanspreekpunt. Maak een afspraak. Geeft verwijzing voor specialist/ziekenhuis. | EN: Always first point of contact. Make an appointment. Gives a referral for specialist/hospital.'},
+    {term:'Apotheek — kleine vragen / minor questions',desc:'NL: Advies zonder afspraak. Heeft recept nodig voor receptplichtige medicijnen. | EN: Advice without appointment. Needs prescription for prescription medicines.'},
+    {term:'0900-8844 — politie niet-spoed / non-emergency police',desc:'NL: Voor meldingen die geen directe reactie vereisen. | EN: For reporting things that already happened, no immediate response needed.'},
+   ]},
+  {type:'bilingual', title:'De huisarts — altijd eerst / The GP — always first',
+   nl:`In Nederland ga je <strong>nooit direct naar het ziekenhuis of specialist</strong>. Je belt altijd eerst de <strong>huisarts</strong>. De huisarts geeft een <strong>verwijzing</strong> als je specialist of ziekenhuis nodig hebt.<br><br>Als je verhuist: je schrijft je <strong>zelf</strong> in bij een huisarts in je buurt. De gemeente doet dit niet voor je.`,
+   en:`In the Netherlands you <strong>never go directly to a hospital or specialist</strong>. You always call the <strong>GP (huisarts)</strong> first. The GP gives a <strong>referral (verwijzing)</strong> if you need a specialist or hospital.<br><br>When you move: you register <strong>yourself</strong> with a GP in your area. The gemeente does not arrange this.`},
+  {type:'deflist', title:'Zorgverzekering / Health insurance',
+   items:[
+    {term:'Zorgverzekering',desc:'NL: Verplicht voor iedereen in Nederland. Je kiest zelf je verzekeraar. | EN: Compulsory for everyone in the Netherlands. You choose your own insurer.'},
+    {term:'Eigen risico / Deductible',desc:'NL: €385 per jaar (2026). Je betaalt de eerste €385 zelf; daarna betaalt de verzekering. Huisartsbezoek is vrijgesteld. | EN: €385 per year (2026). You pay the first €385 yourself; then insurance pays. GP visits are exempt.'},
+    {term:'Zorgtoeslag',desc:'NL: Subsidie voor lage inkomens — aanvragen bij de Belastingdienst. | EN: Subsidy for low incomes — apply at the Belastingdienst.'},
+    {term:'Recept / Prescription',desc:'NL: Doktersrecept verplicht bij apotheek voor receptplichtige medicijnen. | EN: Doctor\'s prescription required at pharmacy for prescription medicines.'},
+   ]},
+  {type:'deflist', title:'Overige begrippen / Other key concepts',
+   items:[
+    {term:'Medisch beroepsgeheim / Medical confidentiality',desc:'NL: Arts mag je gegevens niet delen zonder jouw toestemming — ook niet bij overdracht naar nieuwe arts. | EN: Doctor cannot share your data without your consent (toestemming) — even when transferring to a new doctor.'},
+    {term:'Tolk / Interpreter',desc:'NL: Als patiënt geen Nederlands spreekt, regelt de huisarts een professionele tolk. De patiënt niet zomaar wegsturen. | EN: If a patient does not speak Dutch, the GP arranges a professional interpreter. Do not just send the patient away.'},
+    {term:'Consultatiebureau',desc:'NL: Gratis voor baby\'s en peuters (0–4 jaar): groei controleren en vaccinaties geven. Geen kinderopvang of huishoudelijke hulp. | EN: Free for babies and toddlers (0–4): checks growth and gives vaccinations. Does NOT provide childcare or housework.'},
+    {term:'Arboarts / bedrijfsarts',desc:'NL: Na 6 weken ziekte ingeschakeld door werkgever. Adviseert over terugkeer naar werk. Behandelt geen ziekte. | EN: After 6 weeks sick leave, involved by employer. Advises on returning to work. Does not treat illness.'},
+   ]},
+  {type:'examples', items:[
+   {nl:'Huisarts = altijd eerst. Ziekenhuis = alleen met verwijzing van huisarts.',en:'GP = always first. Hospital = only with a referral from the GP.'},
+   {nl:'112 = levensgevaar. Huisartsenpost = spoed buiten kantooruren.',en:'112 = life-threatening. Out-of-hours GP = urgent outside office hours.'},
+   {nl:'Apotheek heeft een recept nodig voor receptplichtige medicijnen.',en:'Pharmacy needs a prescription for prescription medicines.'},
+   {nl:'Je schrijft je zelf in bij een nieuwe huisarts als je verhuist.',en:'You register yourself with a new GP when you move.'},
+  ]},
+ ]},
+];
+
+// ============================================================
+// UITLEG (EXPLANATION) PANEL
+// ============================================================
+let activeExplanation = 't1';
+
+function renderExplanations() {
+  const nav = document.getElementById('uitleg-nav');
+  const content = document.getElementById('uitleg-content');
+
+  // Build sidebar nav
+  nav.innerHTML = THEMES.map(t => `
+    <button class="uitleg-nav-btn${activeExplanation===t.id?' active':''}" onclick="setExplanation('${t.id}')">
+      <span class="uitleg-nav-num">T${t.id.slice(1)}</span>
+      ${t.emoji||''} ${t.nl}
+    </button>
+  `).join('');
+
+  // Build mobile selector
+  const mobileSelId = 'uitleg-mobile-sel';
+  let mobileSel = document.getElementById(mobileSelId);
+  if (!mobileSel) {
+    mobileSel = document.createElement('select');
+    mobileSel.id = mobileSelId;
+    mobileSel.className = 'uitleg-mobile-sel';
+    mobileSel.onchange = e => setExplanation(e.target.value);
+    document.getElementById('panel-uitleg').insertBefore(mobileSel, document.querySelector('.uitleg-layout'));
+  }
+  mobileSel.innerHTML = THEMES.map(t=>`<option value="${t.id}"${activeExplanation===t.id?' selected':''}>${t.emoji||''} T${t.id.slice(1)} · ${t.nl}</option>`).join('');
+
+  // Build all sections
+  content.innerHTML = EXPLANATIONS.map(exp => {
+    const theme = THEMES.find(t=>t.id===exp.id);
+    const diffLabel = exp.difficulty==='hard'?'Moeilijk / Hard':exp.difficulty==='medium'?'Gemiddeld / Medium':'Makkelijker / Easier';
+    const diffClass = exp.difficulty==='hard'?'diff-hard':exp.difficulty==='medium'?'diff-medium':'diff-easy';
+    return `<div class="uitleg-section${activeExplanation===exp.id?' active':''}" id="us-${exp.id}">
+      <div class="us-header">
+        <div class="us-tag"><span class="us-emoji">${theme.emoji||''}</span> Thema ${exp.id.slice(1)}</div>
+        <div class="us-title-nl">${theme.nl}</div>
+        <div class="us-title-en">${theme.en}</div>
+        <span class="us-difficulty ${diffClass}">${diffLabel}</span>
+      </div>
+      ${exp.blocks.map(b => renderBlock(b)).join('')}
+    </div>`;
+  }).join('');
+}
+
+function renderBlock(b) {
+  if (b.type==='prose') return `
+    <div class="us-block">
+      <div class="us-block-title">${b.title}</div>
+      <div class="us-prose">${b.content}</div>
+    </div>`;
+
+  if (b.type==='deflist') return `
+    <div class="us-block">
+      <div class="us-block-title">${b.title}</div>
+      <div class="us-deflist">${b.items.map(item=>`
+        <div class="us-def">
+          <div class="us-def-term">${item.term}</div>
+          <div class="us-def-desc">${item.desc}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+
+  if (b.type==='table') return `
+    <div class="us-block">
+      <div class="us-block-title">${b.title}</div>
+      <div style="overflow-x:auto">
+        <table class="us-table">
+          <thead><tr>${b.headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+          <tbody>${b.rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  if (b.type==='school') return `
+    <div class="us-block">
+      <div class="us-block-title">${b.title}</div>
+      <div class="us-prose">${b.content}</div>
+    </div>`;
+
+  if (b.type==='examples') return `
+    <div class="us-block">
+      <div class="us-block-title">Voorbeeldzinnen / Examples</div>
+      <div class="us-examples">${b.items.map(e=>`
+        <div class="us-example">
+          <div class="us-ex-nl">${e.nl}</div>
+          <div class="us-ex-en">${e.en}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+
+  if (b.type==='bilingual') return `
+    <div class="us-block">
+      <div class="us-block-title">${b.title}</div>
+      <div class="us-bilingual">
+        <div class="us-bil-nl"><div class="us-bil-lang">🇳🇱 Nederlands</div>${b.nl}</div>
+        <div class="us-bil-en"><div class="us-bil-lang">🇬🇧 English</div>${b.en}</div>
+      </div>
+    </div>`;
+
+  if (b.type==='path') return `
+    <div class="us-block">
+      <div class="us-block-title">${b.title}</div>
+      <div class="us-path">
+        ${b.rows.map(row => {
+          if (row.type==='arrow') return `<div class="us-path-arrow">↓</div>`;
+          if (row.type==='label') return `<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 4px">${row.text}</div>`;
+          return `<div class="us-path-row">${row.boxes.map(box=>`
+            <div class="us-path-box ${box.color||''}">
+              ${box.label?`<div class="us-path-label">${box.label}</div>`:''}
+              <div class="us-path-name">${box.name}</div>
+              ${box.detail?`<div class="us-path-detail">${box.detail}</div>`:''}
+              ${box.connects?`<div class="us-path-connects">→ ${box.connects}</div>`:''}
+            </div>`).join('')}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+  return '';
+}
+
+function tipBlock(content){ return `<div class="us-block"><div class="us-tip">💡 ${content}</div></div>`; }
+
+function setExplanation(id) {
+  activeExplanation = id;
+  // Update nav
+  document.querySelectorAll('.uitleg-nav-btn').forEach(b => b.classList.toggle('active', b.onclick.toString().includes(`'${id}'`)));
+  // Update sections
+  document.querySelectorAll('.uitleg-section').forEach(s => s.classList.toggle('active', s.id===`us-${id}`));
+  // Update mobile select
+  const sel = document.getElementById('uitleg-mobile-sel');
+  if (sel) sel.value = id;
+  // Scroll content to top
+  document.getElementById('uitleg-content').scrollTop = 0;
+  window.scrollTo(0,0);
+}
+function renderSummary() {
+  const totalWords = WORDS.length;
+  const reviewWords = WORDS.filter(w=>w.wrong).length;
+  const totalQ = QA.length;
+  const wrongQ1 = QA.filter(q=>q.exam===1&&q.wrong).length;
+  const totalQ1 = QA.filter(q=>q.exam===1).length;
+  const score1 = totalQ1 - wrongQ1;
+
+  const wrongList = QA.filter(q=>q.wrong);
+
+  document.getElementById('summary-content').innerHTML = `
+    <div class="summary-grid">
+      <div class="stat-card"><div class="stat-num stat-blue">${totalWords}</div><div class="stat-label">Woorden / Keywords</div></div>
+      <div class="stat-card"><div class="stat-num stat-red">${reviewWords}</div><div class="stat-label">Te herhalen / For review</div></div>
+      <div class="stat-card"><div class="stat-num stat-blue">${totalQ}</div><div class="stat-label">Vragen totaal / Total questions</div></div>
+      <div class="stat-card"><div class="stat-num stat-green">${score1}/${totalQ1}</div><div class="stat-label">Score Examen 1</div></div>
+    </div>
+    <div class="section-title">⚠ Foute antwoorden Examen 1 / Wrong answers from Exam 1</div>
+    <div class="wrong-list">
+      ${wrongList.filter(q=>q.exam===1).map(q=>{
+        const lines=q.q.split('\n'); const alines=q.a.split('\n');
+        return `<div class="wrong-item">
+          <div class="wi-q">${lines[0]}</div>
+          <div class="wi-a">✓ ${alines[0]}</div>
+          <div class="wi-source">${q.note}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="section-title" style="margin-top:28px">📚 Thema-overzicht / Theme overview</div>
+    <div class="theme-grid" style="margin-top:0">
+      ${THEMES.map(t=>{
+        const wc=wordCount(t.id),qc=qaCount(t.id),bad=wrongCount(t.id);
+        return `<div class="theme-card">
+          <div class="tc-num">T${t.id.slice(1)}</div>
+          <div class="tc-title">${t.nl}</div>
+          <div class="tc-en" style="font-size:12px;color:var(--text3)">${t.en}</div>
+          <div class="tc-meta" style="margin-top:8px">
+            <span class="badge badge-blue">${wc} woorden</span>
+            <span class="badge badge-blue">${qc} vragen</span>
+            ${bad>0?`<span class="badge badge-red">⚠ ${bad}</span>`:'<span class="badge badge-green">✓ goed</span>'}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+// ============================================================
+// TABS & LANG
+// ============================================================
+function showTab(id) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  const tabs = ['themes','uitleg','vocab','qa','summary'];
+  document.querySelectorAll('.tab')[tabs.indexOf(id)].classList.add('active');
+  if (id==='themes') renderThemes();
+  if (id==='uitleg') renderExplanations();
+  if (id==='vocab') { renderVocabFilters(); renderVocab(); }
+  if (id==='qa') { renderQAFilters(); renderQA(); }
+  if (id==='summary') renderSummary();
+}
+
+function setLang(l) {
+  lang = l;
+  ['nl','en','bi'].forEach(x => document.getElementById('btn-'+x).classList.toggle('active', x===l));
+  const activeTab = document.querySelector('.tab.active');
+  const tabs = ['themes','vocab','qa','summary'];
+  const activeId = tabs[Array.from(document.querySelectorAll('.tab')).indexOf(activeTab)];
+  showTab(activeId||'themes');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderThemes();
+renderVocabFilters();
+renderQAFilters();
+</script>
+</body>
+</html>
